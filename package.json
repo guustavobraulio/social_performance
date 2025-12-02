@@ -1,0 +1,25 @@
+{
+  "name": "social-performance",
+  "version": "1.0.0",
+  "description": "Plataforma de testes de performance web - Social Core",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 3000 -o",
+    "dev": "http-server -p 3000 -o",
+    "dev:8000": "http-server -p 8000 -o",
+    "build": "echo 'Build concluído! Este é um projeto estático, não requer build.' && npm run copy-assets",
+    "copy-assets": "echo 'Assets já estão no lugar correto.'",
+    "serve": "http-server -p 3000"
+  },
+  "keywords": [
+    "performance",
+    "testing",
+    "web"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
+

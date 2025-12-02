@@ -491,10 +491,70 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeTools();
   initializeScheduler();
   initializeNumberSpinners();
+  initializeInfoTooltips();
 });
 
+// Initialize info tooltips
+function initializeInfoTooltips() {
+  // Aguardar um pouco para garantir que o DOM está totalmente carregado
+  setTimeout(() => {
+    const infoIcons = document.querySelectorAll('.info-icon-container');
+    
+    if (infoIcons.length === 0) {
+      return;
+    }
+    
+    infoIcons.forEach((container) => {
+      const icon = container.querySelector('.info-icon');
+      const tooltip = container.querySelector('.info-tooltip');
+      
+      if (icon && tooltip) {
+        // Garantir que o tooltip está oculto inicialmente
+        tooltip.style.display = 'none';
+        
+        // Adicionar event listeners
+        container.addEventListener('mouseenter', function(e) {
+          e.stopPropagation();
+          const tooltip = this.querySelector('.info-tooltip');
+          if (tooltip) {
+            tooltip.style.display = 'block';
+            tooltip.style.opacity = '1';
+            tooltip.style.visibility = 'visible';
+          }
+        });
+        
+        container.addEventListener('mouseleave', function(e) {
+          e.stopPropagation();
+          const tooltip = this.querySelector('.info-tooltip');
+          if (tooltip) {
+            tooltip.style.display = 'none';
+            tooltip.style.opacity = '1';
+            tooltip.style.visibility = 'visible';
+          }
+        });
+      }
+    });
+  }, 200);
+}
+
 function initializeApp() {
-  // Load mock history data
+  // Load history from localStorage first
+  try {
+    const savedHistory = localStorage.getItem('testHistory');
+    if (savedHistory) {
+      const parsed = JSON.parse(savedHistory);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        testState.history = parsed;
+        updateHistoryTable();
+        updateSidebarStats();
+        return; // Don't load mock data if we have saved history
+      }
+    }
+  } catch (e) {
+    // localStorage might be disabled or corrupted, continue with mock data
+  }
+  
+  // Load mock history data only if no saved history exists
   mockTests.forEach((test, index) => {
     const date = new Date();
     date.setHours(date.getHours() - (mockTests.length - index));
@@ -503,6 +563,13 @@ function initializeApp() {
       ...test
     });
   });
+  
+  // Save mock data to localStorage
+  try {
+    localStorage.setItem('testHistory', JSON.stringify(testState.history));
+  } catch (e) {
+    // localStorage might be full or disabled
+  }
   
   updateHistoryTable();
   updateSidebarStats();
@@ -561,8 +628,13 @@ function setupEventListeners() {
     });
   }
 
-  // Test button
-  document.getElementById('startBtn').addEventListener('click', startTest);
+  // Test button with safe access
+  const startBtn = document.getElementById('startBtn');
+  if (startBtn) {
+    startBtn.addEventListener('click', startTest);
+  } else {
+    console.error('Botão startBtn não encontrado no DOM');
+  }
 
   // History actions
   document.getElementById('clearHistoryBtn').addEventListener('click', showClearHistoryConfirmation);
@@ -592,7 +664,19 @@ function handleFileUpload(file) {
 }
 
 function startTest() {
-  if (testState.isRunning) return;
+  try {
+    
+    if (testState.isRunning) {
+      addLog('warning', 'Teste já está em execução');
+      return;
+    }
+    
+    // Validate DOM is ready
+    if (!document.getElementById('urlInput')) {
+      console.error('DOM não está pronto. Elementos não encontrados.');
+      addLog('error', 'Erro: DOM não está pronto. Recarregue a página.');
+      return;
+    }
 
   // Switch to monitor tab
   document.querySelectorAll('.header-tab').forEach(tab => {
@@ -610,19 +694,50 @@ function startTest() {
     timestamps: []
   };
 
-  // Get configuration
+  // Get configuration with safe element access
+  const urlInput = document.getElementById('urlInput');
+  const usersInput = document.getElementById('usersInput');
+  const durationInput = document.getElementById('durationInput');
+  const rampUpInput = document.getElementById('rampUpInput');
+  const thinkTimeInput = document.getElementById('thinkTimeInput');
+  const engineSelect = document.getElementById('engineSelect');
+  const methodSelect = document.getElementById('methodSelect');
+  const testTypeSelect = document.getElementById('testTypeSelect');
+  
+  // Validate required elements
+  if (!urlInput) {
+    addLog('error', 'Erro: Campo URL não encontrado');
+    console.error('Elemento urlInput não encontrado no DOM');
+    return;
+  }
+  
+  if (!methodSelect) {
+    addLog('error', 'Erro: Campo Method não encontrado');
+    console.error('Elemento methodSelect não encontrado no DOM');
+    return;
+  }
+  
   const config = {
-    url: document.getElementById('urlInput').value,
-    users: parseInt(document.getElementById('usersInput').value),
-    duration: parseInt(document.getElementById('durationInput').value),
-    rampUp: parseInt(document.getElementById('rampUpInput').value),
-    thinkTime: parseInt(document.getElementById('thinkTimeInput').value),
-    engine: document.getElementById('engineSelect').value,
-    testType: document.getElementById('testTypeSelect').value
+    url: urlInput.value || '',
+    users: usersInput ? parseInt(usersInput.value) || 5 : 5,
+    duration: durationInput ? parseInt(durationInput.value) || 15 : 15,
+    rampUp: rampUpInput ? parseInt(rampUpInput.value) || 5 : 5,
+    thinkTime: thinkTimeInput ? parseInt(thinkTimeInput.value) || 1 : 1,
+    engine: engineSelect ? engineSelect.value || 'k6' : 'k6',
+    method: methodSelect.value || 'GET',
+    testType: testTypeSelect ? testTypeSelect.value : 'Load Test'
   };
 
-  if (!config.url) {
+  if (!config.url || config.url.trim() === '') {
     addLog('error', 'Por favor, insira uma URL válida');
+    return;
+  }
+  
+  // Validate URL format
+  try {
+    new URL(config.url);
+  } catch (e) {
+    addLog('error', 'URL inválida. Por favor, use um formato válido (ex: https://example.com)');
     return;
   }
 
@@ -634,10 +749,18 @@ function startTest() {
   };
 
   // Update UI
-  document.getElementById('startBtn').disabled = true;
+  const startBtn = document.getElementById('startBtn');
+  if (startBtn) {
+    startBtn.disabled = true;
+  }
 
   // Clear previous logs
-  document.getElementById('logsContainer').innerHTML = '';
+  const logsContainer = document.getElementById('logsContainer');
+  if (logsContainer) {
+    logsContainer.innerHTML = '';
+  } else {
+    console.error('logsContainer não encontrado');
+  }
 
   // Add logs
   addLog('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -671,114 +794,560 @@ function startTest() {
   }
   
   addLog('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  addLog('info', 'Inicializando engine de teste...');
-  addLog('success', 'Engine conectada');
-  addLog('info', 'Preparando cenários de teste...');
 
   // Initialize charts
+  try {
   initializeCharts();
+  } catch (error) {
+    console.error('Erro ao inicializar gráficos:', error);
+    addLog('warning', 'Aviso: Gráficos podem não funcionar corretamente');
+  }
 
-  // Start metrics simulation
+    // Start real performance test
   setTimeout(() => {
     addLog('success', 'Ramp-up iniciado');
-    simulateTest(config);
+      runRealPerformanceTest(config);
   }, 1000);
+  } catch (error) {
+    console.error('Erro em startTest():', error);
+    addLog('error', `Erro ao iniciar teste: ${error.message}`);
+    const startBtn = document.getElementById('startBtn');
+    if (startBtn) {
+      startBtn.disabled = false;
+    }
+    testState.isRunning = false;
+  }
 }
 
-function simulateTest(config) {
+// Real performance test with actual HTTP requests
+async function runRealPerformanceTest(config) {
   const startTime = Date.now();
   const duration = config.duration * 1000;
   const rampUpDuration = config.rampUp * 1000;
   
-  let requestCount = 0;
-  let logInterval = 2000;
-  let lastLogTime = 0;
+  // Metrics tracking - store in testState for access when test is stopped
+  let metrics = {
+    totalRequests: 0,
+    successfulRequests: 0,
+    failedRequests: 0,
+    responseTimes: [],
+    requestTimestamps: [] // Track when each request was made
+  };
+  
+  // Store metrics in testState for access when test is stopped
+  testState.currentMetrics = metrics;
+  
+  // Active user sessions
+  const activeSessions = [];
   let lastChartUpdate = 0;
+  let lastLogTime = 0;
+  let lastThroughputCount = 0;
+  let lastThroughputTime = Date.now();
   const chartUpdateInterval = 2000;
-
-  const interval = setInterval(() => {
+  const logInterval = 2000;
+  
+  // CORS Proxy configuration - using reliable and tested proxies
+  const corsProxies = [
+    'https://api.allorigins.win/raw?url=',  // Most reliable, supports all methods
+    'https://corsproxy.io/?',                // Good for GET/POST requests
+    'https://api.codetabs.com/v1/proxy?quest=', // Alternative proxy
+    'https://thingproxy.freeboard.io/fetch/',  // Backup proxy
+    'https://cors-anywhere.herokuapp.com/',   // May require activation but works well
+    'https://proxy.cors.sh/?',                // Newer proxy service
+    'https://api.allorigins.win/get?url='      // Alternative allorigins endpoint
+  ];
+  
+  // URLs known to block CORS - use proxy from start
+  const knownCorsBlockedDomains = [
+    'google.com',
+    'brandili.com.br',
+    'lojasinoar.com.br',
+    'amazon.com',
+    'facebook.com',
+    'twitter.com',
+    'instagram.com'
+  ];
+  
+  // For production stores, ALWAYS use proxy from start - they almost always block CORS
+  let useCorsProxy = false;
+  
+  // Check if URL is likely to block CORS - use proxy from start for known domains
+  try {
+    const urlHost = new URL(config.url).hostname.toLowerCase();
+    const likelyBlocksCors = knownCorsBlockedDomains.some(domain => urlHost.includes(domain));
+    
+    // For known CORS-blocking domains (especially production stores), ALWAYS use proxy
+    if (likelyBlocksCors) {
+      useCorsProxy = true;
+      corsProxyIndex = 0; // Start with first proxy
+    }
+  } catch (e) {
+    // On URL parse error, try without proxy first
+  }
+  
+  let corsProxyIndex = 0;
+  let corsErrorsCount = 0;
+  let lastCorsErrorTime = 0;
+  
+  // Function to get URL with optional CORS proxy
+  function getRequestUrl(url) {
+    if (useCorsProxy && corsProxies[corsProxyIndex]) {
+      const proxy = corsProxies[corsProxyIndex];
+      let proxyUrl;
+      
+      // Different proxy formats - handle each proxy's specific format correctly
+      // IMPORTANT: Always encode the URL properly to avoid 404 errors
+      const encodedUrl = encodeURIComponent(url);
+      
+      if (proxy.includes('allorigins.win')) {
+        // allorigins.win format: https://api.allorigins.win/raw?url=ENCODED_URL
+        // Works with both /raw?url= and /get?url=
+        proxyUrl = proxy + encodedUrl;
+      } else if (proxy.includes('corsproxy.io')) {
+        // corsproxy.io format: https://corsproxy.io/?ENCODED_URL
+        proxyUrl = proxy + encodedUrl;
+      } else if (proxy.includes('codetabs.com')) {
+        // codetabs format: https://api.codetabs.com/v1/proxy?quest=ENCODED_URL
+        proxyUrl = proxy + encodedUrl;
+      } else if (proxy.includes('cors-anywhere')) {
+        // cors-anywhere format: https://cors-anywhere.herokuapp.com/URL
+        // This one doesn't need encoding in the path
+        proxyUrl = proxy + url;
+      } else if (proxy.includes('cors.sh')) {
+        // cors.sh format: https://proxy.cors.sh/?ENCODED_URL
+        proxyUrl = proxy + encodedUrl;
+      } else if (proxy.includes('thingproxy')) {
+        // thingproxy format: https://thingproxy.freeboard.io/fetch/URL
+        // This one doesn't need encoding
+        proxyUrl = proxy + url;
+      } else {
+        // Default: encode URL for safety
+        proxyUrl = proxy + encodedUrl;
+      }
+      
+      // Validate URL before returning
+      try {
+        new URL(proxyUrl);
+      } catch (e) {
+        // Fallback: try with double encoding if single encoding failed
+        proxyUrl = proxy + encodeURIComponent(encodeURIComponent(url));
+      }
+      
+      
+      return proxyUrl;
+    }
+    return url;
+  }
+  
+  // Function to try next proxy if current one fails
+  function tryNextProxy() {
+    const previousProxy = corsProxies[corsProxyIndex];
+    const previousIndex = corsProxyIndex;
+    corsProxyIndex++;
+    if (corsProxyIndex >= corsProxies.length) {
+      corsProxyIndex = 0; // Reset to first proxy
+      // Don't disable proxy completely, just cycle back
+      addLog('warning', `⚠️ Todos os ${corsProxies.length} proxies foram testados. Reiniciando ciclo...`);
+      // Reset metrics to give new cycle a chance
+      return true; // Continue trying
+    }
+    addLog('warning', `🔄 Proxy ${previousIndex + 1}/${corsProxies.length} falhou. Trocando para proxy ${corsProxyIndex + 1}/${corsProxies.length}...`);
+    return true;
+  }
+  
+  // Prepare request options
+  const requestOptions = {
+    method: config.method || 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...testState.advanced.headers
+    }
+  };
+  
+  // Add body if present and method supports it
+  if (testState.advanced.body && Object.keys(testState.advanced.body).length > 0) {
+    if (['POST', 'PUT', 'PATCH'].includes(config.method)) {
+      requestOptions.body = JSON.stringify(testState.advanced.body);
+    }
+  }
+  
+  // Function to make a single HTTP request
+  async function makeRequest(sessionId) {
+    if (!testState.isRunning) return null;
+    
+    const requestStart = performance.now();
+    let responseTime = 0;
+    let timeoutId = null;
+    
+    try {
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+      
+      // Try to fetch with current configuration
+      let fetchUrl = getRequestUrl(config.url);
+      let fetchOptions = {
+        ...requestOptions,
+        signal: controller.signal,
+        mode: useCorsProxy ? 'cors' : 'cors',
+        credentials: 'omit'
+      };
+      
+      // If using proxy, simplify headers to avoid preflight requests
+      if (useCorsProxy && corsProxies[corsProxyIndex]) {
+        const currentProxy = corsProxies[corsProxyIndex];
+        
+        // Simplify headers to avoid CORS preflight (OPTIONS requests)
+        // Only use simple headers that don't trigger preflight
+        const simpleHeaders = {
+          'Accept': 'application/json, text/plain, */*'
+        };
+        
+        // Different proxies have different requirements
+        if (currentProxy.includes('allorigins.win')) {
+          // allorigins.win - best proxy, supports all methods
+          fetchOptions.method = config.method || 'GET';
+          fetchOptions.headers = simpleHeaders;
+          // Only add Content-Type if we have a body (for POST/PUT/PATCH)
+          if (fetchOptions.body && ['POST', 'PUT', 'PATCH'].includes(config.method)) {
+            fetchOptions.headers['Content-Type'] = 'application/json';
+          }
+        } else if (currentProxy.includes('corsproxy.io')) {
+          // corsproxy.io - supports GET and POST
+          if (['GET', 'POST'].includes(config.method)) {
+            fetchOptions.method = config.method;
+            fetchOptions.headers = simpleHeaders;
+            if (fetchOptions.body && config.method === 'POST') {
+              fetchOptions.headers['Content-Type'] = 'application/json';
+            }
+          } else {
+            fetchOptions.method = 'GET';
+            delete fetchOptions.body;
+            fetchOptions.headers = simpleHeaders;
+          }
+        } else {
+          // Other proxies - GET only for safety (most reliable)
+          fetchOptions.method = 'GET';
+          delete fetchOptions.body;
+          fetchOptions.headers = simpleHeaders;
+        }
+        
+      }
+      
+      const response = await fetch(fetchUrl, fetchOptions);
+      
+      if (timeoutId) clearTimeout(timeoutId);
+      const requestEnd = performance.now();
+      responseTime = Math.round(requestEnd - requestStart);
+      
+      metrics.totalRequests++;
+      metrics.responseTimes.push(responseTime);
+      metrics.requestTimestamps.push(Date.now());
+      // Update testState metrics
+      testState.currentMetrics = metrics;
+      
+      // Handle proxy-specific error detection
+      if (useCorsProxy) {
+        const status = response.status;
+        
+        // Proxies may return these status codes when they fail or block requests
+        // 404 means proxy couldn't find the URL - likely URL encoding issue
+        if (status === 403 || status === 404 || status === 429 || status === 502 || status === 503 || status === 504) {
+          // Proxy error - try next proxy immediately
+          corsErrorsCount++;
+          if (corsErrorsCount >= 1) {
+            if (tryNextProxy()) {
+              corsErrorsCount = 0;
+              addLog('warning', `⚠️ Proxy retornou erro ${status}${status === 404 ? ' (URL não encontrada)' : ''}. Tentando próximo proxy...`);
+            }
+          }
+          metrics.failedRequests++;
+          return { success: false, responseTime, status: status };
+        }
+        
+        // Check if proxy is failing consistently (many failures with no successes)
+        // This helps detect when a proxy is blocking specific domains (common with production stores)
+        // More aggressive: try next proxy after just 2-3 failures
+        if (metrics.totalRequests >= 3 && metrics.successfulRequests === 0 && metrics.failedRequests >= 2) {
+          // Proxy seems to be blocking - try next one immediately
+          if (corsErrorsCount >= 1) {
+            if (tryNextProxy()) {
+              corsErrorsCount = 0;
+              addLog('warning', `⚠️ Proxy bloqueando requisições (${metrics.failedRequests} falhas, 0 sucessos). Tentando próximo...`);
+            }
+          }
+        }
+      }
+      
+      // Standard response handling
+      if (response.ok) {
+        metrics.successfulRequests++;
+        // Update testState metrics
+        testState.currentMetrics = metrics;
+        // Log first success to confirm proxy is working
+        if (metrics.successfulRequests === 1 && useCorsProxy) {
+        }
+        return { success: true, responseTime, status: response.status };
+      } else {
+        metrics.failedRequests++;
+        
+        // If using proxy and getting non-2xx, might be proxy issue - try next proxy
+        if (useCorsProxy && (response.status === 403 || response.status === 429 || response.status >= 500)) {
+          corsErrorsCount++;
+          if (corsErrorsCount >= 1) {
+            if (tryNextProxy()) {
+              corsErrorsCount = 0;
+              addLog('warning', `⚠️ Proxy retornou erro ${response.status}. Tentando próximo proxy...`);
+            }
+          }
+        }
+        
+        // Only log non-2xx status codes occasionally to avoid spam
+        if (metrics.failedRequests % 10 === 0) {
+          addLog('warning', `Requisição ${sessionId}: Status HTTP ${response.status}`);
+        }
+        return { success: false, responseTime, status: response.status };
+      }
+    } catch (error) {
+      if (timeoutId) clearTimeout(timeoutId);
+      
+      const requestEnd = performance.now();
+      responseTime = Math.round(requestEnd - requestStart);
+      
+      metrics.totalRequests++;
+      metrics.failedRequests++;
+      metrics.responseTimes.push(responseTime);
+      metrics.requestTimestamps.push(Date.now());
+      // Update testState metrics
+      testState.currentMetrics = metrics;
+      
+      // Categorize error types
+      const errorName = error.name || '';
+      const errorMsg = error.message || String(error) || 'Erro desconhecido';
+      let errorMessage = errorMsg;
+      let errorType = 'unknown';
+      
+      if (errorName === 'AbortError' || errorMsg.includes('aborted')) {
+        errorType = 'timeout';
+        errorMessage = 'Timeout (requisição demorou mais de 30s)';
+      } else if (errorMsg.includes('ERR_NAME_NOT_RESOLVED') || errorMsg.includes('getaddrinfo') || errorMsg.includes('ENOTFOUND')) {
+        errorType = 'dns';
+        errorMessage = 'DNS não resolveu (domínio não encontrado ou inválido)';
+      } else if (errorMsg.includes('CORS') || errorMsg.includes('cross-origin') || errorMsg.includes('Access-Control') || errorMsg.includes('blocked by CORS policy') || 
+                 (errorMsg.includes('Failed to fetch') && (error.stack?.includes('CORS') || error.stack?.includes('Access-Control')))) {
+        // CORS error - check console for CORS messages
+        errorType = 'cors';
+        errorMessage = 'Erro CORS (servidor bloqueou requisição cross-origin)';
+        corsErrorsCount++;
+        
+          // Auto-enable CORS proxy IMMEDIATELY on first CORS error
+          const now = Date.now();
+          if (!useCorsProxy) {
+            useCorsProxy = true;
+            corsProxyIndex = 0;
+            corsErrorsCount = 0;
+            addLog('warning', '🔄 Erro CORS detectado! Ativando proxy...');
+          } else {
+            // Already using proxy but still getting CORS errors - try next proxy immediately
+            corsErrorsCount++;
+            if (corsErrorsCount >= 1) {
+              if (tryNextProxy()) {
+                corsErrorsCount = 0; // Reset counter for new proxy
+              }
+            }
+          }
+        lastCorsErrorTime = now;
+      } else if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('Network request failed') || errorMsg.includes('fetch') || errorMsg.includes('TypeError')) {
+        // Generic network error - check if it's likely CORS based on pattern
+        // If requests are failing immediately with "Failed to fetch" and none succeeded, likely CORS
+        if (metrics.failedRequests >= 1 && metrics.successfulRequests === 0) {
+          // Pattern suggests CORS - requests failing immediately
+          errorType = 'cors';
+          errorMessage = 'Erro CORS (provavelmente bloqueado por política CORS)';
+          corsErrorsCount++;
+          
+          // Auto-enable CORS proxy IMMEDIATELY on first failure
+          const now = Date.now();
+          if (!useCorsProxy) {
+            useCorsProxy = true;
+            corsProxyIndex = 0;
+            corsErrorsCount = 0;
+            addLog('warning', '🔄 Erro de rede detectado! Ativando proxy...');
+          } else {
+            // Already using proxy but still failing - try next proxy IMMEDIATELY
+            corsErrorsCount++;
+            if (corsErrorsCount >= 1) {
+              if (tryNextProxy()) {
+                corsErrorsCount = 0;
+              }
+            }
+          }
+          lastCorsErrorTime = now;
+        } else {
+          errorType = 'network';
+          // Check if it's a DNS error
+          if (errorMsg.includes('ERR_NAME_NOT_RESOLVED') || errorMsg.includes('getaddrinfo') || errorMsg.includes('ENOTFOUND')) {
+            errorType = 'dns';
+            errorMessage = 'DNS não resolveu (domínio não encontrado ou inválido)';
+          } else {
+            errorMessage = 'Erro de rede (servidor inacessível ou timeout)';
+          }
+        }
+      }
+      
+      // Only log errors occasionally to avoid console spam
+      if (metrics.failedRequests === 1) {
+        addLog('error', `Primeira requisição falhou: ${errorMessage}`);
+        if (errorType === 'dns') {
+          addLog('info', '💡 Verifique se a URL está correta e o domínio existe');
+        } else if (errorType === 'cors') {
+          addLog('info', '💡 O servidor bloqueou requisições CORS');
+          if (!useCorsProxy) {
+            addLog('info', '🔄 Proxy CORS será ativado automaticamente após alguns erros');
+            addLog('info', '💡 Dica: Marque "Usar Proxy CORS" para ativar desde o início');
+          } else {
+            addLog('info', '⚠️ Proxy CORS está ativo mas ainda há erros');
+            addLog('info', '🔄 Tentando próximo proxy automaticamente...');
+          }
+          addLog('info', '💡 Sugestão: Teste APIs que permitem CORS como jsonplaceholder.typicode.com');
+          addLog('info', '📖 Veja CORS_SOLUTIONS.md para mais opções');
+        } else if (errorType === 'network') {
+          addLog('info', '💡 Verifique sua conexão e se o servidor está acessível');
+        }
+        // Log detalhado apenas no console, não poluir a UI
+        // Error logged to UI, no console spam
+          name: errorName,
+          message: errorMsg,
+          type: errorType,
+          url: config.url
+        });
+      } else if (metrics.failedRequests % 10 === 0) {
+        addLog('warning', `${metrics.failedRequests} requisições falharam. Último erro: ${errorMessage}`);
+      }
+      
+      return { success: false, responseTime, error: errorMessage, errorType };
+    }
+  }
+  
+  // Function to run a user session (simulates one virtual user)
+  async function runUserSession(sessionId) {
+    while (testState.isRunning) {
+      const elapsed = Date.now() - startTime;
+      if (elapsed >= duration) break;
+      
+      // Make request
+      await makeRequest(sessionId);
+      
+      // Think time (simulates user thinking/reading)
+      if (config.thinkTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, config.thinkTime * 1000));
+      } else {
+        // Small delay to avoid overwhelming the server
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+  }
+  
+  // Ramp-up: gradually increase active users
+  const rampUpInterval = setInterval(() => {
     if (!testState.isRunning) {
-      clearInterval(interval);
+      clearInterval(rampUpInterval);
       return;
     }
 
     const elapsed = Date.now() - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    
-    // Calculate active users based on ramp-up
-    let activeUsers;
-    if (elapsed < rampUpDuration) {
-      activeUsers = Math.floor(config.users * (elapsed / rampUpDuration));
-    } else {
-      activeUsers = config.users;
+    if (elapsed >= duration) {
+      clearInterval(rampUpInterval);
+      return;
     }
-
-    // Calculate metrics
-    const baseRPS = activeUsers * 2;
-    const variation = Math.sin(elapsed / 1000) * 0.2;
-    const throughput = Math.max(0, Math.floor(baseRPS * (1 + variation)));
     
-    const baseResponseTime = config.testType === 'Stress Test' ? 300 : 200;
-    const responseTime = Math.floor(baseResponseTime + Math.random() * 200);
+    // Calculate target active users based on ramp-up
+    let targetUsers;
+    if (elapsed < rampUpDuration) {
+      targetUsers = Math.max(1, Math.floor(config.users * (elapsed / rampUpDuration)));
+    } else {
+      targetUsers = config.users;
+    }
     
-    const baseSuccessRate = config.testType === 'Spike Test' ? 85 : 95;
-    const successRate = Math.max(0, Math.min(100, baseSuccessRate + (Math.random() - 0.5) * 10));
-
-    // Update metrics
+    // Start new sessions if needed
+    while (activeSessions.length < targetUsers && testState.isRunning) {
+      const sessionId = activeSessions.length + 1;
+      activeSessions.push(sessionId);
+      runUserSession(sessionId);
+    }
+  }, 500);
+  
+  // Metrics update interval
+  const metricsInterval = setInterval(() => {
+    if (!testState.isRunning) {
+      clearInterval(metricsInterval);
+      return;
+    }
+    
+    const elapsed = Date.now() - startTime;
+    const elapsedSeconds = Math.floor(elapsed / 1000);
+    
+    if (elapsed >= duration) {
+      clearInterval(metricsInterval);
+      clearInterval(rampUpInterval);
+      
+      // Calculate final metrics
+      const avgResponseTime = metrics.responseTimes.length > 0
+        ? Math.round(metrics.responseTimes.reduce((a, b) => a + b, 0) / metrics.responseTimes.length)
+        : 0;
+      
+      const successRate = metrics.totalRequests > 0
+        ? ((metrics.successfulRequests / metrics.totalRequests) * 100)
+        : 0;
+      
+      endTest(config, {
+        requests: metrics.totalRequests,
+        avgResponse: avgResponseTime,
+        successRate: successRate
+      });
+      return;
+    }
+    
+    // Calculate current metrics (last 2 seconds)
+    const now = Date.now();
+    const twoSecondsAgo = now - 2000;
+    const recentRequests = metrics.requestTimestamps.filter(ts => ts > twoSecondsAgo).length;
+    const throughput = recentRequests / 2; // requests per second
+    
+    // Get recent response times (last 20 requests)
+    const recentResponseTimes = metrics.responseTimes.slice(-20);
+    const avgResponseTime = recentResponseTimes.length > 0
+      ? Math.round(recentResponseTimes.reduce((a, b) => a + b, 0) / recentResponseTimes.length)
+      : 0;
+    
+    const successRate = metrics.totalRequests > 0
+      ? ((metrics.successfulRequests / metrics.totalRequests) * 100)
+      : 0;
+    
+    const activeUsers = activeSessions.length;
+    
+    // Update UI metrics
     updateMetric('throughput', throughput);
-    updateMetric('avgResponse', responseTime);
+    updateMetric('avgResponse', avgResponseTime);
     updateMetric('activeUsers', activeUsers);
     updateMetric('successRateMetric', successRate.toFixed(1));
 
-    requestCount += throughput;
-
     // Update charts every 2 seconds
     if (elapsed - lastChartUpdate >= chartUpdateInterval) {
-      const elapsedSeconds = Math.floor(elapsed / 1000);
-      addChartData(elapsedSeconds, responseTime, throughput);
+      addChartData(elapsedSeconds, avgResponseTime, throughput);
       lastChartUpdate = elapsed;
     }
 
     // Add periodic logs
     if (elapsed - lastLogTime >= logInterval) {
-      const elapsedSeconds = Math.floor(elapsed / 1000);
-      addLog('info', `[${elapsedSeconds}s] ${activeUsers} usuários ativos, ${throughput} req/s, ${responseTime}ms média`);
+      addLog('info', `[${elapsedSeconds}s] ${activeUsers} usuários ativos, ${throughput} req/s, ${avgResponseTime}ms média, ${successRate.toFixed(1)}% sucesso`);
       lastLogTime = elapsed;
-
-      // Random events
-      if (Math.random() > 0.8) {
-        const events = [
-          { type: 'info', msg: 'Checkpoint alcançado' },
-          { type: 'warning', msg: 'Latência ligeiramente elevada detectada' },
-          { type: 'success', msg: 'Performance estável' }
-        ];
-        const event = events[Math.floor(Math.random() * events.length)];
-        addLog(event.type, event.msg);
-      }
     }
-
-    // End test
-    if (progress >= 1) {
-      clearInterval(interval);
-      endTest(config, {
-        requests: requestCount,
-        avgResponse: responseTime,
-        successRate: successRate
-      });
-    }
-  }, 100);
+  }, 1000);
 }
 
-function endTest(config, results) {
-  testState.isRunning = false;
-
-  addLog('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  addLog('success', 'Teste finalizado');
-  addLog('info', `Total de requisições: ${results.requests}`);
-  addLog('info', `Tempo médio de resposta: ${results.avgResponse}ms`);
-  addLog('info', `Taxa de sucesso: ${results.successRate.toFixed(1)}%`);
-  addLog('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-
+// Helper function to save test to history
+function saveTestToHistory(config, results) {
   // Determine status and diagnostic
   let status = 'Sucessas';
   let diagnostic = 'Performance excelente';
@@ -807,18 +1376,84 @@ function endTest(config, results) {
   };
 
   testState.history.unshift(testRecord);
+  
+  // Persist to localStorage
+  try {
+    localStorage.setItem('testHistory', JSON.stringify(testState.history));
+  } catch (e) {
+    // localStorage might be full or disabled, continue without persistence
+  }
+  
   updateHistoryTable();
   updateSidebarStats();
+}
+
+function endTest(config, results) {
+  testState.isRunning = false;
+
+  addLog('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  addLog('success', 'Teste finalizado');
+  addLog('info', `Total de requisições: ${results.requests}`);
+  addLog('info', `Tempo médio de resposta: ${results.avgResponse}ms`);
+  addLog('info', `Taxa de sucesso: ${results.successRate.toFixed(1)}%`);
+  addLog('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+  // Save to history
+  saveTestToHistory(config, results);
 
   // Reset UI
-  document.getElementById('startBtn').disabled = false;
+  const startBtn = document.getElementById('startBtn');
+  if (startBtn) {
+    startBtn.disabled = false;
+  }
+  
+  // Clear current metrics
+  testState.currentMetrics = null;
+  testState.currentTest = null;
 }
 
 function stopTest() {
   if (!testState.isRunning) return;
+  
+  const wasRunning = testState.isRunning;
   testState.isRunning = false;
-  addLog('warning', 'Teste interrompido pelo usuário');
-  document.getElementById('startBtn').disabled = false;
+  
+  // Save test to history if we have metrics
+  if (wasRunning && testState.currentTest && testState.currentMetrics) {
+    const metrics = testState.currentMetrics;
+    
+    // Calculate final metrics from current state
+    const avgResponseTime = metrics.responseTimes.length > 0
+      ? Math.round(metrics.responseTimes.reduce((a, b) => a + b, 0) / metrics.responseTimes.length)
+      : 0;
+    
+    const successRate = metrics.totalRequests > 0
+      ? ((metrics.successfulRequests / metrics.totalRequests) * 100)
+      : 0;
+    
+    // Save to history
+    saveTestToHistory(testState.currentTest, {
+      requests: metrics.totalRequests,
+      avgResponse: avgResponseTime,
+      successRate: successRate
+    });
+    
+    addLog('warning', 'Teste interrompido pelo usuário');
+    addLog('info', `Total de requisições: ${metrics.totalRequests}`);
+    addLog('info', `Tempo médio de resposta: ${avgResponseTime}ms`);
+    addLog('info', `Taxa de sucesso: ${successRate.toFixed(1)}%`);
+  } else {
+    addLog('warning', 'Teste interrompido pelo usuário');
+  }
+  
+  const startBtn = document.getElementById('startBtn');
+  if (startBtn) {
+    startBtn.disabled = false;
+  }
+  
+  // Clear current metrics
+  testState.currentMetrics = null;
+  testState.currentTest = null;
 }
 
 function updateMetric(id, value) {
@@ -848,6 +1483,10 @@ function updateMetric(id, value) {
 
 function addLog(type, message) {
   const container = document.getElementById('logsContainer');
+  if (!container) {
+    return;
+  }
+  
   const entry = document.createElement('div');
   entry.className = `log-entry log-${type}`;
   
@@ -2315,6 +2954,12 @@ function showClearHistoryConfirmation() {
     'Tem certeza que deseja limpar o histórico de testes? Esta ação não pode ser desfeita.',
     () => {
       testState.history = [];
+      // Clear localStorage
+      try {
+        localStorage.removeItem('testHistory');
+      } catch (e) {
+        // localStorage might be disabled
+      }
       updateHistoryTable();
       updateSidebarStats();
       showNotification('success', '✓ Histórico limpo com sucesso!');
@@ -2398,17 +3043,23 @@ document.querySelectorAll('.metric-value').forEach(el => {
 
 // Chart Functions
 function initializeCharts() {
-  // Show charts container, hide placeholder
-  document.getElementById('chartsPlaceholder').style.display = 'none';
-  document.getElementById('chartsContainer').style.display = 'grid';
-
+  try {
   // Initialize canvas contexts
   const responseTimeCanvas = document.getElementById('responseTimeChart');
   const throughputCanvas = document.getElementById('throughputChart');
 
-  if (responseTimeCanvas && throughputCanvas) {
+    if (!responseTimeCanvas || !throughputCanvas) {
+      console.warn('Canvas elements não encontrados. Gráficos podem não funcionar.');
+      return;
+    }
+
     charts.responseTime = responseTimeCanvas.getContext('2d');
     charts.throughput = throughputCanvas.getContext('2d');
+    
+    if (!charts.responseTime || !charts.throughput) {
+      console.warn('Não foi possível obter contextos dos canvas.');
+      return;
+    }
     
     // Set canvas size based on container
     resizeCanvas(responseTimeCanvas);
@@ -2419,6 +3070,9 @@ function initializeCharts() {
     const throughputColor = '#10B981';
     drawChart(charts.responseTime, [], [], responseColor, 'ms');
     drawChart(charts.throughput, [], [], throughputColor, 'req/s');
+  } catch (error) {
+    console.error('Erro ao inicializar gráficos:', error);
+    // Não quebra a execução do teste se os gráficos falharem
   }
 }
 
@@ -2665,7 +3319,6 @@ window.addEventListener('resize', () => {
 });
 
 async function executePerformanceTest() {
-  console.log('🚀 Iniciando teste de performance...');
 
   try {
     // Pega configuração do formulário
@@ -2768,7 +3421,6 @@ function logTest(message) {
     logsElement.textContent += `${timestamp} - ${message}\n`;
     logsElement.scrollTop = logsElement.scrollHeight;
   }
-  console.log(message);
 }
 
 // Função auxiliar para toast

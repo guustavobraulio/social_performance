@@ -1814,6 +1814,7 @@ label {
 
 /* Simple Number Input Styling */
 input[type="number"] {
+  appearance: textfield;
   -moz-appearance: textfield;
   padding: 12px;
 }
@@ -2590,6 +2591,7 @@ input[type="number"]::-moz-number-spin-box {
 
 .chart-card {
   padding: 20px;
+  overflow: visible;
 }
 
 .logs-card {
@@ -2683,6 +2685,8 @@ input[type="number"]::-moz-number-spin-box {
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+  position: relative;
+  overflow: visible;
 }
 
 .chart-legend-dot {
@@ -2695,6 +2699,117 @@ input[type="number"]::-moz-number-spin-box {
   font-size: 14px;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+/* Info Icon and Tooltip */
+.info-icon-container {
+  position: relative;
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.info-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+  color: var(--card-bg);
+  font-size: 12px;
+  font-weight: 600;
+  font-style: italic;
+  cursor: help;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+  line-height: 1;
+  user-select: none;
+}
+
+.info-icon-container:hover .info-icon {
+  opacity: 1;
+  background: var(--primary);
+  transform: scale(1.1);
+}
+
+.info-tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 2px solid #475569;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 
+    0 25px 70px rgba(0, 0, 0, 0.95),
+    0 0 0 1px rgba(71, 85, 105, 0.5),
+    inset 0 1px 2px rgba(255, 255, 255, 0.1);
+  display: none;
+  pointer-events: none;
+  z-index: 10000;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: normal;
+  margin-bottom: 0;
+  backdrop-filter: blur(20px);
+}
+
+.info-icon-container:hover .info-tooltip {
+  display: block;
+  pointer-events: auto;
+}
+
+.info-tooltip strong {
+  display: block;
+  color: #CBD5E1;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.2px;
+  opacity: 1;
+}
+
+.info-tooltip p {
+  margin: 0;
+  color: #94A3B8;
+  font-size: 12px;
+  line-height: 1.6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  opacity: 1;
+}
+
+/* Tooltip arrow */
+.info-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid #1E293B;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+}
+
+.info-tooltip::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #475569;
+  z-index: -1;
 }
 
 .chart-canvas-container {
