@@ -142,18 +142,18 @@ function getScriptCode(params) {
     // K6 script with advanced settings
     const hasHeaders = Object.keys(testState.advanced.headers).length > 0;
     const hasBody = Object.keys(testState.advanced.body).length > 0;
-    
+
     if (hasHeaders || hasBody) {
       t = `import http from 'k6/http';\n\nexport const options = {\n  stages: [\n    { target: VUS, duration: 'RAMPUP' },\n    { target: VUS, duration: 'DURATION' }\n  ]\n};\n\nexport default function() {\n`;
-      
+
       if (hasHeaders) {
         t += `  const headers = ${JSON.stringify(testState.advanced.headers, null, 2).replace(/\n/g, '\n  ')};\n`;
       }
-      
+
       if (hasBody) {
         t += `  const body = JSON.stringify(${JSON.stringify(testState.advanced.body)});\n`;
       }
-      
+
       t += `  `;
       if (hasHeaders && hasBody) {
         t += `http.METHOD('ENDPOINT', body, { headers: headers });`;
@@ -162,18 +162,18 @@ function getScriptCode(params) {
       } else if (hasBody) {
         t += `http.METHOD('ENDPOINT', body);`;
       }
-      
+
       t += `\n}`;
     } else {
       t = scriptTemplates.k6;
     }
   }
-  
+
   t = t.replace(/VUS/g, params.vus)
-       .replace(/METHOD/g, params.method.toLowerCase())
-       .replace(/ENDPOINT/g, params.endpoint)
-       .replace(/DURATION/g, params.duration + "s")
-       .replace(/RAMPUP/g, params.rampup + "s");
+    .replace(/METHOD/g, params.method.toLowerCase())
+    .replace(/ENDPOINT/g, params.endpoint)
+    .replace(/DURATION/g, params.duration + "s")
+    .replace(/RAMPUP/g, params.rampup + "s");
   return t;
 }
 
@@ -184,12 +184,12 @@ function updateScriptDisplay() {
   if (pre) {
     pre.innerHTML = renderScriptWithHighlight(code, params.engine);
     // Resize code content for super compact script on JMeter
-    if(params.engine==='jmeter'){
-      pre.parentElement.parentElement.style.maxHeight='370px';
-      pre.parentElement.parentElement.style.overflowY='auto';
+    if (params.engine === 'jmeter') {
+      pre.parentElement.parentElement.style.maxHeight = '370px';
+      pre.parentElement.parentElement.style.overflowY = 'auto';
     } else {
-      pre.parentElement.parentElement.style.maxHeight='';
-      pre.parentElement.parentElement.style.overflowY='';
+      pre.parentElement.parentElement.style.maxHeight = '';
+      pre.parentElement.parentElement.style.overflowY = '';
     }
   }
   // language indicator
@@ -213,13 +213,13 @@ function updateScriptDisplay() {
 // Format script with line numbers and syntax highlighting
 function renderScriptWithHighlight(code, engine) {
   const lines = code.split('\n');
-  const highlighted = engine === 'jmeter' ? 
-    lines.map(line => highlightXML(line)) : 
+  const highlighted = engine === 'jmeter' ?
+    lines.map(line => highlightXML(line)) :
     lines.map(line => highlightJS(line));
-  
+
   // Generate line numbers
   const lineNumbers = lines.map((_, i) => i + 1).join('\n');
-  
+
   // Create wrapper with line numbers and code with proper word wrapping
   return `<div class="script-code-wrapper"><div class="script-line-numbers">${lineNumbers}</div><div class="script-code-content">${highlighted.map(line => `<div class="script-line-content">${line || ' '}</div>`).join('')}</div></div>`;
 }
@@ -227,11 +227,11 @@ function renderScriptWithHighlight(code, engine) {
 function highlightJS(line) {
   // Enhanced JS syntax highlighting with proper colors
   line = line.replace(/(import|export|const|function|default|return|from)/g, '<span class="keyword">$1</span>')
-             .replace(/(http)/g, '<span class="function">$1</span>')
-             .replace(/('.*?'|".*?")/g, '<span class="string">$1</span>')
-             .replace(/(\d+)/g, '<span class="number">$1</span>')
-             .replace(/([\[\]\{\}\(\)])/g, '<span class="bracket">$1</span>')
-             .replace(/([,:;])/g, '<span class="operator">$1</span>');
+    .replace(/(http)/g, '<span class="function">$1</span>')
+    .replace(/('.*?'|".*?")/g, '<span class="string">$1</span>')
+    .replace(/(\d+)/g, '<span class="number">$1</span>')
+    .replace(/([\[\]\{\}\(\)])/g, '<span class="bracket">$1</span>')
+    .replace(/([,:;])/g, '<span class="operator">$1</span>');
   return line;
 }
 function highlightXML(line) {
@@ -248,7 +248,7 @@ function highlightXML(line) {
 
 // Update script whenever a config parameter changes
 function bindScriptUpdater() {
-  ['engineSelect','methodSelect','urlInput','usersInput','durationInput','rampUpInput'].forEach(id => {
+  ['engineSelect', 'methodSelect', 'urlInput', 'usersInput', 'durationInput', 'rampUpInput'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       el.addEventListener('input', updateScriptDisplay);
@@ -256,13 +256,13 @@ function bindScriptUpdater() {
     }
   });
   updateScriptDisplay();
-  
+
   // Bind copy script button
   const copyBtn = document.getElementById('copyScriptBtn');
   if (copyBtn) {
     copyBtn.addEventListener('click', copyScriptToClipboard);
   }
-  
+
   // Bind JSON validation for advanced fields
   initializeAdvancedSettings();
 }
@@ -271,7 +271,7 @@ function bindScriptUpdater() {
 function copyScriptToClipboard() {
   const params = getScriptParams();
   const code = getScriptCode(params);
-  
+
   // Create a temporary textarea to copy text
   const textarea = document.createElement('textarea');
   textarea.value = code;
@@ -279,10 +279,10 @@ function copyScriptToClipboard() {
   textarea.style.opacity = '0';
   document.body.appendChild(textarea);
   textarea.select();
-  
+
   try {
     document.execCommand('copy');
-    
+
     // Update button to show success
     const btn = document.getElementById('copyScriptBtn');
     const originalHTML = btn.innerHTML;
@@ -294,12 +294,12 @@ function copyScriptToClipboard() {
       </svg>
       <span>Copied!</span>
     `;
-    
+
     setTimeout(() => {
       btn.classList.remove('copied');
       btn.innerHTML = originalHTML;
     }, 2000);
-    
+
     showNotification('success', 'Script copiado para a área de transferência!');
   } catch (err) {
     showNotification('error', 'Erro ao copiar script');
@@ -315,17 +315,17 @@ function bindHeaderTabs() {
     tab.addEventListener('click', () => {
       tabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      
+
       // Update sidebar nav active state
       document.querySelectorAll('.nav-item').forEach(navItem => {
         navItem.classList.toggle('active', navItem.dataset.nav === tab.dataset.tab);
       });
-      
+
       // Views
       document.querySelectorAll('.tab-view').forEach(view => {
         view.classList.remove('active');
       });
-      const viewElement = document.getElementById(tab.dataset.tab+"View");
+      const viewElement = document.getElementById(tab.dataset.tab + "View");
       if (viewElement) {
         viewElement.classList.add('active');
       }
@@ -338,16 +338,16 @@ function bindSidebarToggle() {
   const sidebar = document.getElementById('sidebar');
   const toggle = document.getElementById('sidebarToggle');
   const hamburger = document.getElementById('hamburgerMenu');
-  
+
   toggle.addEventListener('click', () => {
     sidebar.classList.toggle('collapsed');
   });
-  
+
   // Hamburger menu toggle (mobile/tablet)
   if (hamburger) {
     hamburger.addEventListener('click', () => {
       sidebar.classList.toggle('mobile-open');
-      
+
       // Add overlay on mobile
       if (sidebar.classList.contains('mobile-open')) {
         createOverlay();
@@ -361,7 +361,7 @@ function bindSidebarToggle() {
 // Create overlay for mobile sidebar
 function createOverlay() {
   if (document.getElementById('sidebarOverlay')) return;
-  
+
   const overlay = document.createElement('div');
   overlay.id = 'sidebarOverlay';
   overlay.style.cssText = `
@@ -375,12 +375,12 @@ function createOverlay() {
     backdrop-filter: blur(4px);
     animation: fadeIn 0.3s ease;
   `;
-  
+
   overlay.addEventListener('click', () => {
     document.getElementById('sidebar').classList.remove('mobile-open');
     removeOverlay();
   });
-  
+
   document.body.appendChild(overlay);
 }
 
@@ -411,15 +411,15 @@ document.head.appendChild(styleSheet);
 function initializeTheme() {
   // Set default theme to dark
   applyTheme(currentTheme);
-  
+
   // Bind theme toggle buttons
   const themeToggle = document.getElementById('themeToggle');
   const themeToggleHeader = document.getElementById('themeToggleHeader');
-  
+
   if (themeToggle) {
     themeToggle.addEventListener('click', toggleTheme);
   }
-  
+
   if (themeToggleHeader) {
     themeToggleHeader.addEventListener('click', toggleTheme);
   }
@@ -432,30 +432,30 @@ function toggleTheme() {
 
 function applyTheme(theme) {
   const html = document.documentElement;
-  
+
   if (theme === 'light') {
     html.setAttribute('data-theme', 'light');
   } else {
     html.removeAttribute('data-theme');
   }
-  
+
   // Force repaint to ensure all colors update
   document.body.style.display = 'none';
   document.body.offsetHeight;
   document.body.style.display = '';
-  
+
   // Update theme label
   const themeLabels = document.querySelectorAll('.theme-label');
   themeLabels.forEach(label => {
     label.textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
   });
-  
+
   // Redraw charts if they exist to match new theme
   setTimeout(() => {
     if (charts.responseTime && charts.throughput && testState.chartData.timestamps.length > 0) {
       const responseColor = theme === 'light' ? '#0891B2' : '#00D9FF';
       const throughputColor = '#10B981';
-      
+
       drawChart(
         charts.responseTime,
         testState.chartData.timestamps,
@@ -495,21 +495,21 @@ function initializeInfoTooltips() {
   // Aguardar um pouco para garantir que o DOM está totalmente carregado
   setTimeout(() => {
     const infoIcons = document.querySelectorAll('.info-icon-container');
-    
+
     if (infoIcons.length === 0) {
       return;
     }
-    
+
     infoIcons.forEach((container) => {
       const icon = container.querySelector('.info-icon');
       const tooltip = container.querySelector('.info-tooltip');
-      
+
       if (icon && tooltip) {
         // Garantir que o tooltip está oculto inicialmente
         tooltip.style.display = 'none';
-        
+
         // Adicionar event listeners
-        container.addEventListener('mouseenter', function(e) {
+        container.addEventListener('mouseenter', function (e) {
           e.stopPropagation();
           const tooltip = this.querySelector('.info-tooltip');
           if (tooltip) {
@@ -518,8 +518,8 @@ function initializeInfoTooltips() {
             tooltip.style.visibility = 'visible';
           }
         });
-        
-        container.addEventListener('mouseleave', function(e) {
+
+        container.addEventListener('mouseleave', function (e) {
           e.stopPropagation();
           const tooltip = this.querySelector('.info-tooltip');
           if (tooltip) {
@@ -549,7 +549,7 @@ function initializeApp() {
   } catch (e) {
     // localStorage might be disabled or corrupted, continue with mock data
   }
-  
+
   // Load mock history data only if no saved history exists
   mockTests.forEach((test, index) => {
     const date = new Date();
@@ -559,14 +559,14 @@ function initializeApp() {
       ...test
     });
   });
-  
+
   // Save mock data to localStorage
   try {
     localStorage.setItem('testHistory', JSON.stringify(testState.history));
   } catch (e) {
     // localStorage might be full or disabled
   }
-  
+
   updateHistoryTable();
   updateSidebarStats();
 }
@@ -577,23 +577,23 @@ function setupEventListeners() {
     item.addEventListener('click', (e) => {
       e.preventDefault();
       const nav = item.dataset.nav;
-      
+
       // Update sidebar nav active state
       document.querySelectorAll('.nav-item').forEach(navItem => {
         navItem.classList.remove('active');
       });
       item.classList.add('active');
-      
+
       // Update header tabs
       document.querySelectorAll('.header-tab').forEach(tab => {
         tab.classList.toggle('active', tab.dataset.tab === nav);
       });
-      
+
       // Show corresponding view
       document.querySelectorAll('.tab-view').forEach(view => {
         view.classList.remove('active');
       });
-      const viewElement = document.getElementById(nav+"View");
+      const viewElement = document.getElementById(nav + "View");
       if (viewElement) {
         viewElement.classList.add('active');
       }
@@ -634,7 +634,7 @@ function setupEventListeners() {
 
   // History actions
   document.getElementById('clearHistoryBtn').addEventListener('click', showClearHistoryConfirmation);
-  
+
   // AI Wizard button in config
   const aiWizardBtn = document.querySelector('.btn-ai-wizard');
   if (aiWizardBtn) {
@@ -646,27 +646,27 @@ function setupEventListeners() {
 
 function handleFileUpload(file) {
   if (!file) return;
-  
+
   const allowedTypes = ['.jmx', '.har', '.json'];
   const fileExtension = '.' + file.name.split('.').pop();
-  
+
   if (!allowedTypes.includes(fileExtension)) {
     addLog('error', 'Tipo de arquivo não suportado. Use JMX, HAR ou JSON.');
     return;
   }
-  
+
   document.getElementById('fileName').textContent = file.name;
   addLog('success', `Arquivo "${file.name}" carregado com sucesso`);
 }
 
 function startTest() {
   try {
-    
+
     if (testState.isRunning) {
       addLog('warning', 'Teste já está em execução');
       return;
     }
-    
+
     // Validate DOM is ready
     if (!document.getElementById('urlInput')) {
       console.error('DOM não está pronto. Elementos não encontrados.');
@@ -674,136 +674,136 @@ function startTest() {
       return;
     }
 
-  // Switch to monitor tab
-  document.querySelectorAll('.header-tab').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.tab === 'monitor');
-  });
-  document.querySelectorAll('.tab-view').forEach(view => {
-    view.classList.remove('active');
-  });
-  document.getElementById('monitorView').classList.add('active');
+    // Switch to monitor tab
+    document.querySelectorAll('.header-tab').forEach(tab => {
+      tab.classList.toggle('active', tab.dataset.tab === 'monitor');
+    });
+    document.querySelectorAll('.tab-view').forEach(view => {
+      view.classList.remove('active');
+    });
+    document.getElementById('monitorView').classList.add('active');
 
-  // Reset chart data
-  testState.chartData = {
-    responseTime: [],
-    throughput: [],
-    timestamps: []
-  };
+    // Reset chart data
+    testState.chartData = {
+      responseTime: [],
+      throughput: [],
+      timestamps: []
+    };
 
-  // Get configuration with safe element access
-  const urlInput = document.getElementById('urlInput');
-  const usersInput = document.getElementById('usersInput');
-  const durationInput = document.getElementById('durationInput');
-  const rampUpInput = document.getElementById('rampUpInput');
-  const thinkTimeInput = document.getElementById('thinkTimeInput');
-  const engineSelect = document.getElementById('engineSelect');
-  const methodSelect = document.getElementById('methodSelect');
-  const testTypeSelect = document.getElementById('testTypeSelect');
-  
-  // Validate required elements
-  if (!urlInput) {
-    addLog('error', 'Erro: Campo URL não encontrado');
-    console.error('Elemento urlInput não encontrado no DOM');
-    return;
-  }
-  
-  if (!methodSelect) {
-    addLog('error', 'Erro: Campo Method não encontrado');
-    console.error('Elemento methodSelect não encontrado no DOM');
-    return;
-  }
-  
-  const config = {
-    url: urlInput.value || '',
-    users: usersInput ? parseInt(usersInput.value) || 5 : 5,
-    duration: durationInput ? parseInt(durationInput.value) || 15 : 15,
-    rampUp: rampUpInput ? parseInt(rampUpInput.value) || 5 : 5,
-    thinkTime: thinkTimeInput ? parseInt(thinkTimeInput.value) || 1 : 1,
-    engine: engineSelect ? engineSelect.value || 'k6' : 'k6',
-    method: methodSelect.value || 'GET',
-    testType: testTypeSelect ? testTypeSelect.value : 'Load Test'
-  };
+    // Get configuration with safe element access
+    const urlInput = document.getElementById('urlInput');
+    const usersInput = document.getElementById('usersInput');
+    const durationInput = document.getElementById('durationInput');
+    const rampUpInput = document.getElementById('rampUpInput');
+    const thinkTimeInput = document.getElementById('thinkTimeInput');
+    const engineSelect = document.getElementById('engineSelect');
+    const methodSelect = document.getElementById('methodSelect');
+    const testTypeSelect = document.getElementById('testTypeSelect');
 
-  if (!config.url || config.url.trim() === '') {
-    addLog('error', 'Por favor, insira uma URL válida');
-    return;
-  }
-  
-  // Validate URL format
-  try {
-    new URL(config.url);
-  } catch (e) {
-    addLog('error', 'URL inválida. Por favor, use um formato válido (ex: https://example.com)');
-    return;
-  }
+    // Validate required elements
+    if (!urlInput) {
+      addLog('error', 'Erro: Campo URL não encontrado');
+      console.error('Elemento urlInput não encontrado no DOM');
+      return;
+    }
 
-  testState.isRunning = true;
-  testState.currentTest = {
-    ...config,
-    startTime: Date.now(),
-    duration: config.duration * 1000
-  };
+    if (!methodSelect) {
+      addLog('error', 'Erro: Campo Method não encontrado');
+      console.error('Elemento methodSelect não encontrado no DOM');
+      return;
+    }
 
-  // Update UI
-  const startBtn = document.getElementById('startBtn');
-  if (startBtn) {
-    startBtn.disabled = true;
-  }
+    const config = {
+      url: urlInput.value || '',
+      users: usersInput ? parseInt(usersInput.value) || 5 : 5,
+      duration: durationInput ? parseInt(durationInput.value) || 15 : 15,
+      rampUp: rampUpInput ? parseInt(rampUpInput.value) || 5 : 5,
+      thinkTime: thinkTimeInput ? parseInt(thinkTimeInput.value) || 1 : 1,
+      engine: engineSelect ? engineSelect.value || 'k6' : 'k6',
+      method: methodSelect.value || 'GET',
+      testType: testTypeSelect ? testTypeSelect.value : 'Load Test'
+    };
 
-  // Clear previous logs
-  const logsContainer = document.getElementById('logsContainer');
-  if (logsContainer) {
-    logsContainer.innerHTML = '';
-  } else {
-    console.error('logsContainer não encontrado');
-  }
+    if (!config.url || config.url.trim() === '') {
+      addLog('error', 'Por favor, insira uma URL válida');
+      return;
+    }
 
-  // Add logs
-  addLog('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  addLog('success', 'Teste iniciado com sucesso');
-  addLog('info', `URL: ${config.url}`);
-  addLog('info', `Engine: ${config.engine}`);
-  addLog('info', `Tipo: ${config.testType}`);
-  addLog('info', `Usuários: ${config.users}`);
-  addLog('info', `Duração: ${config.duration}s`);
-  addLog('info', `Ramp-up: ${config.rampUp}s`);
-  
-  // Log advanced settings if present
-  const hasHeaders = Object.keys(testState.advanced.headers).length > 0;
-  const hasBody = Object.keys(testState.advanced.body).length > 0;
-  
-  if (hasHeaders || hasBody) {
+    // Validate URL format
+    try {
+      new URL(config.url);
+    } catch (e) {
+      addLog('error', 'URL inválida. Por favor, use um formato válido (ex: https://example.com)');
+      return;
+    }
+
+    testState.isRunning = true;
+    testState.currentTest = {
+      ...config,
+      startTime: Date.now(),
+      duration: config.duration * 1000
+    };
+
+    // Update UI
+    const startBtn = document.getElementById('startBtn');
+    if (startBtn) {
+      startBtn.disabled = true;
+    }
+
+    // Clear previous logs
+    const logsContainer = document.getElementById('logsContainer');
+    if (logsContainer) {
+      logsContainer.innerHTML = '';
+    } else {
+      console.error('logsContainer não encontrado');
+    }
+
+    // Add logs
     addLog('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    addLog('info', 'Configurações Avançadas:');
-    
-    if (hasHeaders) {
-      const headerPreview = JSON.stringify(testState.advanced.headers).substring(0, 60);
-      addLog('success', `📋 Headers: ${headerPreview}${JSON.stringify(testState.advanced.headers).length > 60 ? '...' : ''}`);
-    }
-    
-    if (hasBody) {
-      const bodyPreview = JSON.stringify(testState.advanced.body).substring(0, 60);
-      addLog('success', `📦 Body: ${bodyPreview}${JSON.stringify(testState.advanced.body).length > 60 ? '...' : ''}`);
-    }
-    
-    addLog('success', '✓ Configuração validada com sucesso');
-  }
-  
-  addLog('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    addLog('success', 'Teste iniciado com sucesso');
+    addLog('info', `URL: ${config.url}`);
+    addLog('info', `Engine: ${config.engine}`);
+    addLog('info', `Tipo: ${config.testType}`);
+    addLog('info', `Usuários: ${config.users}`);
+    addLog('info', `Duração: ${config.duration}s`);
+    addLog('info', `Ramp-up: ${config.rampUp}s`);
 
-  // Initialize charts
-  try {
-  initializeCharts();
-  } catch (error) {
-    console.error('Erro ao inicializar gráficos:', error);
-    addLog('warning', 'Aviso: Gráficos podem não funcionar corretamente');
-  }
+    // Log advanced settings if present
+    const hasHeaders = Object.keys(testState.advanced.headers).length > 0;
+    const hasBody = Object.keys(testState.advanced.body).length > 0;
+
+    if (hasHeaders || hasBody) {
+      addLog('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      addLog('info', 'Configurações Avançadas:');
+
+      if (hasHeaders) {
+        const headerPreview = JSON.stringify(testState.advanced.headers).substring(0, 60);
+        addLog('success', `📋 Headers: ${headerPreview}${JSON.stringify(testState.advanced.headers).length > 60 ? '...' : ''}`);
+      }
+
+      if (hasBody) {
+        const bodyPreview = JSON.stringify(testState.advanced.body).substring(0, 60);
+        addLog('success', `📦 Body: ${bodyPreview}${JSON.stringify(testState.advanced.body).length > 60 ? '...' : ''}`);
+      }
+
+      addLog('success', '✓ Configuração validada com sucesso');
+    }
+
+    addLog('info', '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    // Initialize charts
+    try {
+      initializeCharts();
+    } catch (error) {
+      console.error('Erro ao inicializar gráficos:', error);
+      addLog('warning', 'Aviso: Gráficos podem não funcionar corretamente');
+    }
 
     // Start real performance test
-  setTimeout(() => {
-    addLog('success', 'Ramp-up iniciado');
+    setTimeout(() => {
+      addLog('success', 'Ramp-up iniciado');
       runRealPerformanceTest(config);
-  }, 1000);
+    }, 1000);
   } catch (error) {
     console.error('Erro em startTest():', error);
     addLog('error', `Erro ao iniciar teste: ${error.message}`);
@@ -820,7 +820,7 @@ async function runRealPerformanceTest(config) {
   const startTime = Date.now();
   const duration = config.duration * 1000;
   const rampUpDuration = config.rampUp * 1000;
-  
+
   // Metrics tracking - store in testState for access when test is stopped
   let metrics = {
     totalRequests: 0,
@@ -829,10 +829,10 @@ async function runRealPerformanceTest(config) {
     responseTimes: [],
     requestTimestamps: [] // Track when each request was made
   };
-  
+
   // Store metrics in testState for access when test is stopped
   testState.currentMetrics = metrics;
-  
+
   // Active user sessions
   const activeSessions = [];
   let lastChartUpdate = 0;
@@ -841,7 +841,7 @@ async function runRealPerformanceTest(config) {
   let lastThroughputTime = Date.now();
   const chartUpdateInterval = 2000;
   const logInterval = 2000;
-  
+
   // CORS Proxy configuration - using reliable and tested proxies
   const corsProxies = [
     'https://api.allorigins.win/raw?url=',  // Most reliable, supports all methods
@@ -852,7 +852,7 @@ async function runRealPerformanceTest(config) {
     'https://proxy.cors.sh/?',                // Newer proxy service
     'https://api.allorigins.win/get?url='      // Alternative allorigins endpoint
   ];
-  
+
   // URLs known to block CORS - use proxy from start
   const knownCorsBlockedDomains = [
     'google.com',
@@ -863,15 +863,15 @@ async function runRealPerformanceTest(config) {
     'twitter.com',
     'instagram.com'
   ];
-  
+
   // For production stores, ALWAYS use proxy from start - they almost always block CORS
   let useCorsProxy = false;
-  
+
   // Check if URL is likely to block CORS - use proxy from start for known domains
   try {
     const urlHost = new URL(config.url).hostname.toLowerCase();
     const likelyBlocksCors = knownCorsBlockedDomains.some(domain => urlHost.includes(domain));
-    
+
     // For known CORS-blocking domains (especially production stores), ALWAYS use proxy
     if (likelyBlocksCors) {
       useCorsProxy = true;
@@ -880,21 +880,21 @@ async function runRealPerformanceTest(config) {
   } catch (e) {
     // On URL parse error, try without proxy first
   }
-  
+
   let corsProxyIndex = 0;
   let corsErrorsCount = 0;
   let lastCorsErrorTime = 0;
-  
+
   // Function to get URL with optional CORS proxy
   function getRequestUrl(url) {
     if (useCorsProxy && corsProxies[corsProxyIndex]) {
       const proxy = corsProxies[corsProxyIndex];
       let proxyUrl;
-      
+
       // Different proxy formats - handle each proxy's specific format correctly
       // IMPORTANT: Always encode the URL properly to avoid 404 errors
       const encodedUrl = encodeURIComponent(url);
-      
+
       if (proxy.includes('allorigins.win')) {
         // allorigins.win format: https://api.allorigins.win/raw?url=ENCODED_URL
         // Works with both /raw?url= and /get?url=
@@ -920,7 +920,7 @@ async function runRealPerformanceTest(config) {
         // Default: encode URL for safety
         proxyUrl = proxy + encodedUrl;
       }
-      
+
       // Validate URL before returning
       try {
         new URL(proxyUrl);
@@ -928,13 +928,13 @@ async function runRealPerformanceTest(config) {
         // Fallback: try with double encoding if single encoding failed
         proxyUrl = proxy + encodeURIComponent(encodeURIComponent(url));
       }
-      
-      
+
+
       return proxyUrl;
     }
     return url;
   }
-  
+
   // Function to try next proxy if current one fails
   function tryNextProxy() {
     const previousProxy = corsProxies[corsProxyIndex];
@@ -950,7 +950,7 @@ async function runRealPerformanceTest(config) {
     addLog('warning', `🔄 Proxy ${previousIndex + 1}/${corsProxies.length} falhou. Trocando para proxy ${corsProxyIndex + 1}/${corsProxies.length}...`);
     return true;
   }
-  
+
   // Prepare request options
   const requestOptions = {
     method: config.method || 'GET',
@@ -959,27 +959,27 @@ async function runRealPerformanceTest(config) {
       ...testState.advanced.headers
     }
   };
-  
+
   // Add body if present and method supports it
   if (testState.advanced.body && Object.keys(testState.advanced.body).length > 0) {
     if (['POST', 'PUT', 'PATCH'].includes(config.method)) {
       requestOptions.body = JSON.stringify(testState.advanced.body);
     }
   }
-  
+
   // Function to make a single HTTP request
   async function makeRequest(sessionId) {
     if (!testState.isRunning) return null;
-    
+
     const requestStart = performance.now();
     let responseTime = 0;
     let timeoutId = null;
-    
+
     try {
       // Add timeout to prevent hanging requests
       const controller = new AbortController();
       timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-      
+
       // Try to fetch with current configuration
       let fetchUrl = getRequestUrl(config.url);
       let fetchOptions = {
@@ -988,17 +988,17 @@ async function runRealPerformanceTest(config) {
         mode: useCorsProxy ? 'cors' : 'cors',
         credentials: 'omit'
       };
-      
+
       // If using proxy, simplify headers to avoid preflight requests
       if (useCorsProxy && corsProxies[corsProxyIndex]) {
         const currentProxy = corsProxies[corsProxyIndex];
-        
+
         // Simplify headers to avoid CORS preflight (OPTIONS requests)
         // Only use simple headers that don't trigger preflight
         const simpleHeaders = {
           'Accept': 'application/json, text/plain, */*'
         };
-        
+
         // Different proxies have different requirements
         if (currentProxy.includes('allorigins.win')) {
           // allorigins.win - best proxy, supports all methods
@@ -1027,25 +1027,25 @@ async function runRealPerformanceTest(config) {
           delete fetchOptions.body;
           fetchOptions.headers = simpleHeaders;
         }
-        
+
       }
-      
+
       const response = await fetch(fetchUrl, fetchOptions);
-      
+
       if (timeoutId) clearTimeout(timeoutId);
       const requestEnd = performance.now();
       responseTime = Math.round(requestEnd - requestStart);
-      
+
       metrics.totalRequests++;
       metrics.responseTimes.push(responseTime);
       metrics.requestTimestamps.push(Date.now());
       // Update testState metrics
       testState.currentMetrics = metrics;
-      
+
       // Handle proxy-specific error detection
       if (useCorsProxy) {
         const status = response.status;
-        
+
         // Proxies may return these status codes when they fail or block requests
         // 404 means proxy couldn't find the URL - likely URL encoding issue
         if (status === 403 || status === 404 || status === 429 || status === 502 || status === 503 || status === 504) {
@@ -1060,7 +1060,7 @@ async function runRealPerformanceTest(config) {
           metrics.failedRequests++;
           return { success: false, responseTime, status: status };
         }
-        
+
         // Check if proxy is failing consistently (many failures with no successes)
         // This helps detect when a proxy is blocking specific domains (common with production stores)
         // More aggressive: try next proxy after just 2-3 failures
@@ -1074,7 +1074,7 @@ async function runRealPerformanceTest(config) {
           }
         }
       }
-      
+
       // Standard response handling
       if (response.ok) {
         metrics.successfulRequests++;
@@ -1086,7 +1086,7 @@ async function runRealPerformanceTest(config) {
         return { success: true, responseTime, status: response.status };
       } else {
         metrics.failedRequests++;
-        
+
         // If using proxy and getting non-2xx, might be proxy issue - try next proxy
         if (useCorsProxy && (response.status === 403 || response.status === 429 || response.status >= 500)) {
           corsErrorsCount++;
@@ -1097,7 +1097,7 @@ async function runRealPerformanceTest(config) {
             }
           }
         }
-        
+
         // Only log non-2xx status codes occasionally to avoid spam
         if (metrics.failedRequests % 10 === 0) {
           addLog('warning', `Requisição ${sessionId}: Status HTTP ${response.status}`);
@@ -1106,52 +1106,52 @@ async function runRealPerformanceTest(config) {
       }
     } catch (error) {
       if (timeoutId) clearTimeout(timeoutId);
-      
+
       const requestEnd = performance.now();
       responseTime = Math.round(requestEnd - requestStart);
-      
+
       metrics.totalRequests++;
       metrics.failedRequests++;
       metrics.responseTimes.push(responseTime);
       metrics.requestTimestamps.push(Date.now());
       // Update testState metrics
       testState.currentMetrics = metrics;
-      
+
       // Categorize error types
       const errorName = error.name || '';
       const errorMsg = error.message || String(error) || 'Erro desconhecido';
       let errorMessage = errorMsg;
       let errorType = 'unknown';
-      
+
       if (errorName === 'AbortError' || errorMsg.includes('aborted')) {
         errorType = 'timeout';
         errorMessage = 'Timeout (requisição demorou mais de 30s)';
       } else if (errorMsg.includes('ERR_NAME_NOT_RESOLVED') || errorMsg.includes('getaddrinfo') || errorMsg.includes('ENOTFOUND')) {
         errorType = 'dns';
         errorMessage = 'DNS não resolveu (domínio não encontrado ou inválido)';
-      } else if (errorMsg.includes('CORS') || errorMsg.includes('cross-origin') || errorMsg.includes('Access-Control') || errorMsg.includes('blocked by CORS policy') || 
-                 (errorMsg.includes('Failed to fetch') && (error.stack?.includes('CORS') || error.stack?.includes('Access-Control')))) {
+      } else if (errorMsg.includes('CORS') || errorMsg.includes('cross-origin') || errorMsg.includes('Access-Control') || errorMsg.includes('blocked by CORS policy') ||
+        (errorMsg.includes('Failed to fetch') && (error.stack?.includes('CORS') || error.stack?.includes('Access-Control')))) {
         // CORS error - check console for CORS messages
         errorType = 'cors';
         errorMessage = 'Erro CORS (servidor bloqueou requisição cross-origin)';
         corsErrorsCount++;
-        
-          // Auto-enable CORS proxy IMMEDIATELY on first CORS error
-          const now = Date.now();
-          if (!useCorsProxy) {
-            useCorsProxy = true;
-            corsProxyIndex = 0;
-            corsErrorsCount = 0;
-            addLog('warning', '🔄 Erro CORS detectado! Ativando proxy...');
-          } else {
-            // Already using proxy but still getting CORS errors - try next proxy immediately
-            corsErrorsCount++;
-            if (corsErrorsCount >= 1) {
-              if (tryNextProxy()) {
-                corsErrorsCount = 0; // Reset counter for new proxy
-              }
+
+        // Auto-enable CORS proxy IMMEDIATELY on first CORS error
+        const now = Date.now();
+        if (!useCorsProxy) {
+          useCorsProxy = true;
+          corsProxyIndex = 0;
+          corsErrorsCount = 0;
+          addLog('warning', '🔄 Erro CORS detectado! Ativando proxy...');
+        } else {
+          // Already using proxy but still getting CORS errors - try next proxy immediately
+          corsErrorsCount++;
+          if (corsErrorsCount >= 1) {
+            if (tryNextProxy()) {
+              corsErrorsCount = 0; // Reset counter for new proxy
             }
           }
+        }
         lastCorsErrorTime = now;
       } else if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('Network request failed') || errorMsg.includes('fetch') || errorMsg.includes('TypeError')) {
         // Generic network error - check if it's likely CORS based on pattern
@@ -1161,7 +1161,7 @@ async function runRealPerformanceTest(config) {
           errorType = 'cors';
           errorMessage = 'Erro CORS (provavelmente bloqueado por política CORS)';
           corsErrorsCount++;
-          
+
           // Auto-enable CORS proxy IMMEDIATELY on first failure
           const now = Date.now();
           if (!useCorsProxy) {
@@ -1190,7 +1190,7 @@ async function runRealPerformanceTest(config) {
           }
         }
       }
-      
+
       // Only log errors occasionally to avoid console spam
       if (metrics.failedRequests === 1) {
         addLog('error', `Primeira requisição falhou: ${errorMessage}`);
@@ -1218,20 +1218,20 @@ async function runRealPerformanceTest(config) {
       } else if (metrics.failedRequests % 10 === 0) {
         addLog('warning', `${metrics.failedRequests} requisições falharam. Último erro: ${errorMessage}`);
       }
-      
+
       return { success: false, responseTime, error: errorMessage, errorType };
     }
   }
-  
+
   // Function to run a user session (simulates one virtual user)
   async function runUserSession(sessionId) {
     while (testState.isRunning) {
       const elapsed = Date.now() - startTime;
       if (elapsed >= duration) break;
-      
+
       // Make request
       await makeRequest(sessionId);
-      
+
       // Think time (simulates user thinking/reading)
       if (config.thinkTime > 0) {
         await new Promise(resolve => setTimeout(resolve, config.thinkTime * 1000));
@@ -1241,7 +1241,7 @@ async function runRealPerformanceTest(config) {
       }
     }
   }
-  
+
   // Ramp-up: gradually increase active users
   const rampUpInterval = setInterval(() => {
     if (!testState.isRunning) {
@@ -1254,7 +1254,7 @@ async function runRealPerformanceTest(config) {
       clearInterval(rampUpInterval);
       return;
     }
-    
+
     // Calculate target active users based on ramp-up
     let targetUsers;
     if (elapsed < rampUpDuration) {
@@ -1262,7 +1262,7 @@ async function runRealPerformanceTest(config) {
     } else {
       targetUsers = config.users;
     }
-    
+
     // Start new sessions if needed
     while (activeSessions.length < targetUsers && testState.isRunning) {
       const sessionId = activeSessions.length + 1;
@@ -1270,30 +1270,30 @@ async function runRealPerformanceTest(config) {
       runUserSession(sessionId);
     }
   }, 500);
-  
+
   // Metrics update interval
   const metricsInterval = setInterval(() => {
     if (!testState.isRunning) {
       clearInterval(metricsInterval);
       return;
     }
-    
+
     const elapsed = Date.now() - startTime;
     const elapsedSeconds = Math.floor(elapsed / 1000);
-    
+
     if (elapsed >= duration) {
       clearInterval(metricsInterval);
       clearInterval(rampUpInterval);
-      
+
       // Calculate final metrics
       const avgResponseTime = metrics.responseTimes.length > 0
         ? Math.round(metrics.responseTimes.reduce((a, b) => a + b, 0) / metrics.responseTimes.length)
         : 0;
-      
+
       const successRate = metrics.totalRequests > 0
         ? ((metrics.successfulRequests / metrics.totalRequests) * 100)
         : 0;
-      
+
       endTest(config, {
         requests: metrics.totalRequests,
         avgResponse: avgResponseTime,
@@ -1301,25 +1301,25 @@ async function runRealPerformanceTest(config) {
       });
       return;
     }
-    
+
     // Calculate current metrics (last 2 seconds)
     const now = Date.now();
     const twoSecondsAgo = now - 2000;
     const recentRequests = metrics.requestTimestamps.filter(ts => ts > twoSecondsAgo).length;
     const throughput = recentRequests / 2; // requests per second
-    
+
     // Get recent response times (last 20 requests)
     const recentResponseTimes = metrics.responseTimes.slice(-20);
     const avgResponseTime = recentResponseTimes.length > 0
       ? Math.round(recentResponseTimes.reduce((a, b) => a + b, 0) / recentResponseTimes.length)
       : 0;
-    
+
     const successRate = metrics.totalRequests > 0
       ? ((metrics.successfulRequests / metrics.totalRequests) * 100)
       : 0;
-    
+
     const activeUsers = activeSessions.length;
-    
+
     // Update UI metrics
     updateMetric('throughput', throughput);
     updateMetric('avgResponse', avgResponseTime);
@@ -1369,14 +1369,14 @@ function saveTestToHistory(config, results) {
   };
 
   testState.history.unshift(testRecord);
-  
+
   // Persist to localStorage
   try {
     localStorage.setItem('testHistory', JSON.stringify(testState.history));
   } catch (e) {
     // localStorage might be full or disabled, continue without persistence
   }
-  
+
   updateHistoryTable();
   updateSidebarStats();
 }
@@ -1399,7 +1399,7 @@ function endTest(config, results) {
   if (startBtn) {
     startBtn.disabled = false;
   }
-  
+
   // Clear current metrics
   testState.currentMetrics = null;
   testState.currentTest = null;
@@ -1407,30 +1407,30 @@ function endTest(config, results) {
 
 function stopTest() {
   if (!testState.isRunning) return;
-  
+
   const wasRunning = testState.isRunning;
   testState.isRunning = false;
-  
+
   // Save test to history if we have metrics
   if (wasRunning && testState.currentTest && testState.currentMetrics) {
     const metrics = testState.currentMetrics;
-    
+
     // Calculate final metrics from current state
     const avgResponseTime = metrics.responseTimes.length > 0
       ? Math.round(metrics.responseTimes.reduce((a, b) => a + b, 0) / metrics.responseTimes.length)
       : 0;
-    
+
     const successRate = metrics.totalRequests > 0
       ? ((metrics.successfulRequests / metrics.totalRequests) * 100)
       : 0;
-    
+
     // Save to history
     saveTestToHistory(testState.currentTest, {
       requests: metrics.totalRequests,
       avgResponse: avgResponseTime,
       successRate: successRate
     });
-    
+
     addLog('warning', 'Teste interrompido pelo usuário');
     addLog('info', `Total de requisições: ${metrics.totalRequests}`);
     addLog('info', `Tempo médio de resposta: ${avgResponseTime}ms`);
@@ -1438,12 +1438,12 @@ function stopTest() {
   } else {
     addLog('warning', 'Teste interrompido pelo usuário');
   }
-  
+
   const startBtn = document.getElementById('startBtn');
   if (startBtn) {
     startBtn.disabled = false;
   }
-  
+
   // Clear current metrics
   testState.currentMetrics = null;
   testState.currentTest = null;
@@ -1455,7 +1455,7 @@ function updateMetric(id, value) {
 
   const currentValue = element.textContent.replace(/[^0-9.]/g, '');
   const newValue = typeof value === 'number' ? value : parseFloat(value);
-  
+
   if (currentValue != newValue) {
     element.style.transform = 'scale(1.1)';
     setTimeout(() => {
@@ -1479,23 +1479,23 @@ function addLog(type, message) {
   if (!container) {
     return;
   }
-  
+
   const entry = document.createElement('div');
   entry.className = `log-entry log-${type}`;
-  
+
   const time = new Date().toLocaleTimeString('pt-BR');
   entry.innerHTML = `
     <span class="log-time">${time}</span>
     <span class="log-message">${message}</span>
   `;
-  
+
   container.appendChild(entry);
   container.scrollTop = container.scrollHeight;
 }
 
 function updateHistoryTable() {
   const tbody = document.getElementById('historyTableBody');
-  
+
   if (testState.history.length === 0) {
     tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Nenhum teste executado ainda</td></tr>';
     return;
@@ -1506,7 +1506,7 @@ function updateHistoryTable() {
     const formattedDate = date.toLocaleDateString('pt-BR');
     const formattedTime = date.toLocaleTimeString('pt-BR');
     const statusClass = test.status === 'Sucesso' ? 'test-status-success' : 'test-status-error';
-    
+
     return `
       <tr>
         <td>${formattedDate} ${formattedTime}</td>
@@ -1526,7 +1526,7 @@ function updateSidebarStats() {
   const totalTests = testState.history.length;
   const successTests = testState.history.filter(t => t.status === 'Sucesso').length;
   const successRate = totalTests > 0 ? ((successTests / totalTests) * 100).toFixed(1) : 0;
-  
+
   document.getElementById('totalTests').textContent = totalTests;
   document.getElementById('successRate').textContent = `${successRate}%`;
 }
@@ -1543,11 +1543,11 @@ function loadHistoryFromMemory() {
 function initializeSettings() {
   // Load settings into form
   loadSettingsForm();
-  
+
   // Bind settings form events
   document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
   document.getElementById('resetSettingsBtn').addEventListener('click', resetSettings);
-  
+
   // Theme options
   document.querySelectorAll('.theme-option').forEach(option => {
     option.addEventListener('click', () => {
@@ -1557,7 +1557,7 @@ function initializeSettings() {
       applyTheme(theme);
     });
   });
-  
+
   // Set active theme option
   selectThemeOption(currentTheme);
 }
@@ -1589,22 +1589,22 @@ function saveSettings() {
     retries: parseInt(document.getElementById('retryAttempts').value),
     maxConcurrent: parseInt(document.getElementById('maxConcurrent').value)
   };
-  
+
   // Apply defaults to config form
   document.getElementById('engineSelect').value = appSettings.defaultEngine;
   document.getElementById('usersInput').value = appSettings.defaultVUS;
   document.getElementById('durationInput').value = appSettings.defaultDuration;
   document.getElementById('rampUpInput').value = appSettings.defaultRampup;
-  
+
   updateScriptDisplay();
-  
+
   // Show notification
   showNotification('success', 'Configurações salvas com sucesso!');
 }
 
 function resetSettings() {
   if (!confirm('Tem certeza que deseja restaurar as configurações padrão?')) return;
-  
+
   appSettings = {
     defaultEngine: 'k6',
     defaultVUS: 5,
@@ -1618,12 +1618,12 @@ function resetSettings() {
     retries: 3,
     maxConcurrent: 5
   };
-  
+
   loadSettingsForm();
   selectThemeOption('dark');
   currentTheme = 'dark';
   applyTheme('dark');
-  
+
   showNotification('info', 'Configurações restauradas para os valores padrão');
 }
 
@@ -1639,13 +1639,13 @@ function showNotification(type, message) {
   notification.className = `notification notification-${type}`;
   notification.innerHTML = `
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      ${type === 'success' ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' : 
-        type === 'error' ? '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>' :
+      ${type === 'success' ? '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>' :
+      type === 'error' ? '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>' :
         '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>'}
     </svg>
     <span>${message}</span>
   `;
-  
+
   // Add CSS for notification
   const style = document.createElement('style');
   if (!document.getElementById('notification-styles')) {
@@ -1681,9 +1681,9 @@ function showNotification(type, message) {
     `;
     document.head.appendChild(style);
   }
-  
+
   document.body.appendChild(notification);
-  
+
   // Remove after 3 seconds
   setTimeout(() => {
     notification.style.animation = 'slideOutRight 0.3s ease';
@@ -1705,7 +1705,7 @@ function initializeTools() {
       openToolModal(tool);
     });
   });
-  
+
   // Close modal
   document.getElementById('closeModal').addEventListener('click', closeToolModal);
   document.getElementById('toolModal').addEventListener('click', (e) => {
@@ -1717,7 +1717,7 @@ function openToolModal(tool) {
   const modal = document.getElementById('toolModal');
   const title = document.getElementById('modalTitle');
   const body = document.getElementById('modalBody');
-  
+
   const toolContent = {
     'ai-wizard': {
       title: '✨ Jerfrey AI',
@@ -1901,13 +1901,13 @@ function openToolModal(tool) {
       `
     }
   };
-  
+
   const content = toolContent[tool];
   title.textContent = content.title;
   body.innerHTML = content.content;
-  
+
   modal.classList.add('active');
-  
+
   // Initialize tool-specific features
   if (tool === 'load-profile') {
     setTimeout(() => updateLoadProfilePreview(), 100);
@@ -1918,38 +1918,38 @@ function openToolModal(tool) {
 function generateAISuggestions() {
   const input = document.getElementById('aiWizardInput').value;
   const appType = document.getElementById('aiAppType').value;
-  
+
   if (!input.trim()) {
     showNotification('error', '⚠️ Por favor, descreva seu teste primeiro');
     return;
   }
-  
+
   showNotification('info', 'ℹ️ Analisando sua descrição...');
-  
+
   // Simulate AI processing
   const suggestionsDiv = document.getElementById('aiSuggestions');
   const contentDiv = document.getElementById('aiSuggestionsContent');
-  
+
   contentDiv.innerHTML = '<p style="color: var(--text-secondary); font-style: italic;">🤖 Analisando seu objetivo...</p>';
   suggestionsDiv.style.display = 'block';
-  
+
   setTimeout(() => {
     // Generate smart suggestions based on input
     const words = input.toLowerCase();
     let vus = 50, duration = 60, engine = 'k6';
     let url = 'https://api.example.com';
-    
+
     if (words.includes('1000') || words.includes('mil')) vus = 1000;
     else if (words.includes('500')) vus = 500;
     else if (words.includes('100')) vus = 100;
-    
+
     if (words.includes('stress') || words.includes('estresse')) duration = 300;
     else if (words.includes('spike') || words.includes('pico')) duration = 120;
-    
+
     if (words.includes('jmeter')) engine = 'jmeter';
-    
+
     window.aiSuggestions = { vus, duration, engine, url };
-    
+
     contentDiv.innerHTML = `
       <div style="background: var(--code-bg); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
         <p style="margin: 0 0 12px 0; color: var(--text-primary); font-weight: 600;">✅ Configuração Recomendada:</p>
@@ -1974,18 +1974,18 @@ function applyAISuggestions() {
     showNotification('error', '⚠️ Gere sugestões primeiro');
     return;
   }
-  
+
   const { vus, duration, engine, url } = window.aiSuggestions;
-  
+
   document.getElementById('urlInput').value = url;
   document.getElementById('usersInput').value = vus;
   document.getElementById('durationInput').value = duration;
   document.getElementById('engineSelect').value = engine;
   document.getElementById('rampUpInput').value = Math.floor(duration * 0.1);
-  
+
   updateScriptDisplay();
   closeToolModal();
-  
+
   // Switch to config view
   document.querySelectorAll('.header-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.tab === 'config');
@@ -1994,7 +1994,7 @@ function applyAISuggestions() {
     view.classList.remove('active');
   });
   document.getElementById('configView').classList.add('active');
-  
+
   showNotification('success', '✓ Configuração aplicada com sucesso!');
 }
 
@@ -2002,31 +2002,31 @@ function applyAISuggestions() {
 function generateReport() {
   const selectEl = document.getElementById('reportTestsSelect');
   const selectedOptions = Array.from(selectEl.selectedOptions);
-  
+
   if (selectedOptions.length === 0) {
     showNotification('error', '⚠️ Selecione pelo menos um teste');
     return;
   }
-  
+
   showNotification('info', 'ℹ️ Gerando relatório...');
-  
+
   const format = document.getElementById('reportFormat').value;
   const includeCharts = document.getElementById('reportCharts').checked;
   const includeComparisons = document.getElementById('includeComparisons').checked;
   const includeRecommendations = document.getElementById('reportRecommendations').checked;
-  
+
   const selectedTests = selectedOptions.map(opt => testState.history[parseInt(opt.value)]);
-  
+
   // Store selected tests globally for download
   window.selectedReportTests = selectedTests;
   window.reportOptions = { includeCharts, includeComparisons, includeRecommendations };
-  
+
   // Generate report preview
   const previewDiv = document.getElementById('reportPreview');
   const avgResponseTime = selectedTests.reduce((sum, t) => sum + t.avg_response, 0) / selectedTests.length;
   const avgErrorRate = selectedTests.reduce((sum, t) => sum + t.error_rate, 0) / selectedTests.length;
   const successCount = selectedTests.filter(t => t.status === 'Sucesso').length;
-  
+
   previewDiv.innerHTML = `
     <div style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
       <h4 style="margin-top: 0; color: var(--accent);">📄 Preview do Relatório (${format})</h4>
@@ -2052,18 +2052,18 @@ function downloadReport(format) {
   // Get stored tests from global
   const selectedTests = window.selectedReportTests || [];
   const options = window.reportOptions || {};
-  
+
   if (selectedTests.length === 0) {
     showNotification('error', 'Nenhum teste selecionado');
     return;
   }
-  
+
   // Generate report content based on format
   let content = '';
   let mimeType = '';
   let fileName = '';
   const timestamp = new Date().toISOString().split('T')[0];
-  
+
   try {
     if (format === 'PDF') {
       // Generate text-based PDF content
@@ -2094,11 +2094,11 @@ function downloadReport(format) {
       mimeType = 'application/json;charset=utf-8';
       fileName = `performance-report-${timestamp}.json`;
     }
-    
+
     // Create blob with proper MIME type
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
-    
+
     // Create download link and trigger
     const link = document.createElement('a');
     link.setAttribute('href', url);
@@ -2106,25 +2106,25 @@ function downloadReport(format) {
     link.style.visibility = 'hidden';
     link.style.position = 'absolute';
     link.style.left = '-9999px';
-    
+
     document.body.appendChild(link);
-    
+
     // Force click
     link.click();
-    
+
     // Cleanup after delay
     setTimeout(() => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     }, 150);
-    
+
     showNotification('success', `✓ ${fileName} baixado com sucesso!`);
-    
+
     // Close modal after successful download
     setTimeout(() => {
       closeToolModal();
     }, 1500);
-    
+
   } catch (error) {
     console.error('Download error:', error);
     showNotification('error', 'Erro ao baixar relatório: ' + error.message);
@@ -2135,33 +2135,33 @@ function downloadReport(format) {
 function analyzePerformance() {
   const selectEl = document.getElementById('analyzerTestSelect');
   const selectedIndex = parseInt(selectEl.value);
-  
+
   if (isNaN(selectedIndex) || !testState.history[selectedIndex]) {
     showNotification('error', '⚠️ Nenhum teste disponível para análise');
     return;
   }
-  
+
   showNotification('info', 'ℹ️ Analisando performance...');
-  
+
   const test = testState.history[selectedIndex];
   const resultsDiv = document.getElementById('analysisResults');
-  
+
   // Perform analysis
   const responseAnalysis = test.avg_response < 200 ? 'Excelente' : test.avg_response < 500 ? 'Bom' : test.avg_response < 1000 ? 'Regular' : 'Ruim';
   const errorAnalysis = test.error_rate < 1 ? 'Excelente' : test.error_rate < 5 ? 'Aceitável' : 'Crítico';
-  
+
   const bottlenecks = [];
   if (test.avg_response > 500) bottlenecks.push('⚠️ Tempo de resposta elevado');
   if (test.error_rate > 5) bottlenecks.push('❌ Taxa de erro alta');
   if (test.users > 1000) bottlenecks.push('⚡ Alta concorrência');
-  
+
   const recommendations = [];
   if (test.avg_response > 500) recommendations.push('🔧 Otimizar queries de banco de dados');
   if (test.error_rate > 5) recommendations.push('🛠️ Implementar retry logic e circuit breaker');
   if (test.users > 500) recommendations.push('📈 Considerar auto-scaling');
   recommendations.push('💾 Implementar caching');
   recommendations.push('🚀 Usar CDN para assets estáticos');
-  
+
   resultsDiv.innerHTML = `
     <div style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -2190,9 +2190,9 @@ function analyzePerformance() {
     </div>
   `;
   resultsDiv.style.display = 'block';
-  
+
   showNotification('success', '✓ Análise concluída!');
-  
+
   // Store analysis for export
   window.currentAnalysis = {
     test: test,
@@ -2214,25 +2214,25 @@ function exportAnalysis() {
     showNotification('error', '⚠️ Nenhuma análise disponível');
     return;
   }
-  
+
   const content = JSON.stringify(window.currentAnalysis, null, 2);
   const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const timestamp = new Date().toISOString().split('T')[0];
   const fileName = `analysis-${timestamp}.json`;
-  
+
   const link = document.createElement('a');
   link.setAttribute('href', url);
   link.setAttribute('download', fileName);
   link.style.visibility = 'hidden';
   document.body.appendChild(link);
   link.click();
-  
+
   setTimeout(() => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }, 150);
-  
+
   showNotification('success', `✓ Análise exportada: ${fileName}`);
 }
 
@@ -2241,22 +2241,22 @@ function convertData() {
   const source = document.getElementById('converterSource').value;
   const target = document.getElementById('converterTarget').value;
   const input = document.getElementById('converterInput').value;
-  
+
   if (!input.trim()) {
     showNotification('error', '⚠️ Cole o script de origem primeiro');
     return;
   }
-  
+
   if (source === target) {
     showNotification('error', '⚠️ Selecione formatos de origem e destino diferentes');
     return;
   }
-  
+
   showNotification('info', 'ℹ️ Convertendo script...');
-  
+
   // Simulate conversion
   let output = '';
-  
+
   if (target === 'k6') {
     output = `import http from 'k6/http';\nimport { check, sleep } from 'k6';\n\nexport const options = {\n  vus: 10,\n  duration: '30s',\n};\n\nexport default function () {\n  const res = http.get('https://api.example.com');\n  check(res, {\n    'status is 200': (r) => r.status === 200,\n  });\n  sleep(1);\n}`;
   } else if (target === 'jmeter') {
@@ -2264,13 +2264,13 @@ function convertData() {
   } else if (target === 'postman') {
     output = `{\n  "info": {\n    "name": "Converted Collection",\n    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"\n  },\n  "item": [\n    {\n      "name": "API Request",\n      "request": {\n        "method": "GET",\n        "url": "https://api.example.com"\n      }\n    }\n  ]\n}`;
   }
-  
+
   document.getElementById('converterOutputText').value = output;
   document.getElementById('converterOutput').style.display = 'block';
-  
+
   // Store converted output
   window.convertedOutput = { source, target, output };
-  
+
   showNotification('success', `✓ Script convertido de ${source.toUpperCase()} para ${target.toUpperCase()}!`);
 }
 
@@ -2280,7 +2280,7 @@ function copyConverterOutput() {
     showNotification('error', '⚠️ Nenhum código para copiar');
     return;
   }
-  
+
   output.select();
   try {
     document.execCommand('copy');
@@ -2295,7 +2295,7 @@ function downloadConverterOutput() {
     showNotification('error', '⚠️ Nenhum código para baixar');
     return;
   }
-  
+
   const { source, target, output } = window.convertedOutput;
   const extensions = {
     k6: 'js',
@@ -2303,7 +2303,7 @@ function downloadConverterOutput() {
     postman: 'json',
     har: 'har'
   };
-  
+
   const ext = extensions[target] || 'txt';
   const fileName = `converted-${target}.${ext}`;
   const mimeTypes = {
@@ -2312,23 +2312,23 @@ function downloadConverterOutput() {
     json: 'application/json',
     har: 'application/json'
   };
-  
+
   const mimeType = mimeTypes[ext] || 'text/plain';
   const blob = new Blob([output], { type: `${mimeType};charset=utf-8` });
   const url = URL.createObjectURL(blob);
-  
+
   const link = document.createElement('a');
   link.setAttribute('href', url);
   link.setAttribute('download', fileName);
   link.style.visibility = 'hidden';
   document.body.appendChild(link);
   link.click();
-  
+
   setTimeout(() => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }, 150);
-  
+
   showNotification('success', `✓ ${fileName} baixado com sucesso!`);
 }
 
@@ -2336,33 +2336,33 @@ function downloadConverterOutput() {
 function updateLoadProfilePreview() {
   const canvas = document.getElementById('loadProfileCanvas');
   if (!canvas) return;
-  
+
   const ctx = canvas.getContext('2d');
   const pattern = document.getElementById('loadPattern').value;
   const minUsers = parseInt(document.getElementById('loadMinUsers').value) || 10;
   const maxUsers = parseInt(document.getElementById('loadMaxUsers').value) || 100;
   const duration = parseInt(document.getElementById('loadDuration').value) || 60;
-  
+
   // Set canvas size
   const rect = canvas.getBoundingClientRect();
   canvas.width = rect.width;
   canvas.height = rect.height;
-  
+
   const width = canvas.width;
   const height = canvas.height;
   const padding = 40;
   const chartWidth = width - padding * 2;
   const chartHeight = height - padding * 2;
-  
+
   // Clear canvas
   ctx.clearRect(0, 0, width, height);
-  
+
   // Theme colors
   const isLight = currentTheme === 'light';
   const gridColor = isLight ? '#E5E7EB' : '#2D3F5A';
   const textColor = isLight ? '#64748B' : '#94A3B8';
   const lineColor = isLight ? '#0891B2' : '#00D9FF';
-  
+
   // Draw grid
   ctx.strokeStyle = gridColor;
   ctx.lineWidth = 1;
@@ -2372,14 +2372,14 @@ function updateLoadProfilePreview() {
     ctx.moveTo(padding, y);
     ctx.lineTo(width - padding, y);
     ctx.stroke();
-    
+
     const value = Math.round(maxUsers - ((maxUsers - minUsers) / 5) * i);
     ctx.fillStyle = textColor;
     ctx.font = '11px -apple-system, sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText(value.toString(), padding - 10, y + 4);
   }
-  
+
   // Draw axes
   ctx.strokeStyle = gridColor;
   ctx.lineWidth = 2;
@@ -2388,15 +2388,15 @@ function updateLoadProfilePreview() {
   ctx.lineTo(padding, height - padding);
   ctx.lineTo(width - padding, height - padding);
   ctx.stroke();
-  
+
   // Generate profile data
   const points = 50;
   const data = [];
-  
+
   for (let i = 0; i < points; i++) {
     const t = i / (points - 1);
     let users = minUsers;
-    
+
     switch (pattern) {
       case 'constant':
         users = maxUsers;
@@ -2419,39 +2419,39 @@ function updateLoadProfilePreview() {
         users = minUsers + (maxUsers - minUsers) * (t < 0.5 ? t * 2 : 2 - t * 2);
         break;
     }
-    
+
     data.push(users);
   }
-  
+
   // Draw line
   ctx.strokeStyle = lineColor;
   ctx.lineWidth = 2;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
-  
+
   for (let i = 0; i < data.length; i++) {
     const x = padding + (chartWidth / (data.length - 1)) * i;
     const normalized = (data[i] - minUsers) / (maxUsers - minUsers || 1);
     const y = padding + chartHeight - (normalized * chartHeight);
-    
+
     if (i === 0) ctx.moveTo(x, y);
     else ctx.lineTo(x, y);
   }
-  
+
   ctx.stroke();
-  
+
   // Draw area fill
   ctx.lineTo(width - padding, height - padding);
   ctx.lineTo(padding, height - padding);
   ctx.closePath();
-  
+
   const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
   gradient.addColorStop(0, lineColor + '40');
   gradient.addColorStop(1, lineColor + '00');
   ctx.fillStyle = gradient;
   ctx.fill();
-  
+
   // Draw points
   ctx.fillStyle = lineColor;
   for (let i = 0; i < data.length; i += 5) {
@@ -2462,7 +2462,7 @@ function updateLoadProfilePreview() {
     ctx.arc(x, y, 3, 0, Math.PI * 2);
     ctx.fill();
   }
-  
+
   // Draw time labels
   ctx.fillStyle = textColor;
   ctx.font = '11px -apple-system, sans-serif';
@@ -2479,25 +2479,25 @@ function applyLoadProfile() {
   const minUsers = parseInt(document.getElementById('loadMinUsers').value) || 10;
   const maxUsers = parseInt(document.getElementById('loadMaxUsers').value) || 100;
   const duration = parseInt(document.getElementById('loadDuration').value) || 60;
-  
+
   if (minUsers <= 0 || maxUsers <= 0 || duration <= 0) {
     showNotification('error', '⚠️ Valores devem ser maiores que zero');
     return;
   }
-  
+
   if (minUsers > maxUsers) {
     showNotification('error', '⚠️ Usuários mínimos não pode ser maior que máximos');
     return;
   }
-  
+
   // Apply to test config
   document.getElementById('usersInput').value = maxUsers;
   document.getElementById('durationInput').value = duration;
   document.getElementById('rampUpInput').value = Math.floor(duration * 0.2);
-  
+
   updateScriptDisplay();
   closeToolModal();
-  
+
   // Switch to config view
   document.querySelectorAll('.header-tab').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.tab === 'config');
@@ -2506,7 +2506,7 @@ function applyLoadProfile() {
     view.classList.remove('active');
   });
   document.getElementById('configView').classList.add('active');
-  
+
   showNotification('success', `✓ Perfil "${pattern}" aplicado com sucesso!`);
 }
 
@@ -2515,12 +2515,12 @@ function saveLoadProfile() {
   const minUsers = parseInt(document.getElementById('loadMinUsers').value) || 10;
   const maxUsers = parseInt(document.getElementById('loadMaxUsers').value) || 100;
   const duration = parseInt(document.getElementById('loadDuration').value) || 60;
-  
+
   if (minUsers <= 0 || maxUsers <= 0 || duration <= 0) {
     showNotification('error', '⚠️ Adicione estágios válidos ao perfil');
     return;
   }
-  
+
   const profile = {
     pattern,
     minUsers,
@@ -2528,25 +2528,25 @@ function saveLoadProfile() {
     duration,
     created: new Date().toISOString()
   };
-  
+
   const content = JSON.stringify(profile, null, 2);
   const blob = new Blob([content], { type: 'application/json;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const timestamp = new Date().toISOString().split('T')[0];
   const fileName = `load-profile-${pattern}-${timestamp}.json`;
-  
+
   const link = document.createElement('a');
   link.setAttribute('href', url);
   link.setAttribute('download', fileName);
   link.style.visibility = 'hidden';
   document.body.appendChild(link);
   link.click();
-  
+
   setTimeout(() => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   }, 150);
-  
+
   showNotification('success', `✓ Perfil salvo: ${fileName}`);
 }
 
@@ -2558,27 +2558,27 @@ function generatePDFContent(tests, options) {
   content += '═'.repeat(80) + '\n';
   content += 'Gerado em: ' + new Date().toLocaleString('pt-BR') + '\n';
   content += '═'.repeat(80) + '\n\n';
-  
+
   // Summary section
   content += '┌─ RESUMO EXECUTIVO\n';
   content += '│\n';
-  
+
   const successTests = tests.filter(t => t.status === 'Sucesso').length;
   const successRate = tests.length > 0 ? ((successTests / tests.length) * 100).toFixed(1) : 0;
   const avgResponseTime = tests.reduce((sum, t) => sum + t.avg_response, 0) / tests.length;
   const avgErrorRate = tests.reduce((sum, t) => sum + t.error_rate, 0) / tests.length;
-  
+
   content += `│  📊 Total de Testes: ${tests.length}\n`;
   content += `│  ✅ Taxa de Sucesso: ${successRate}%\n`;
   content += `│  ⏱️  Tempo Médio de Resposta: ${Math.round(avgResponseTime)}ms\n`;
   content += `│  ⚠️  Taxa de Erro Média: ${avgErrorRate.toFixed(1)}%\n`;
   content += '│\n';
   content += '└─────────────────────────────────────────────────────────────────\n\n';
-  
+
   // Detailed tests section
   content += '┌─ DETALHES DOS TESTES\n';
   content += '│\n';
-  
+
   tests.forEach((test, index) => {
     content += `│  Teste #${index + 1}\n`;
     content += `│  ├─ Data/Hora: ${new Date(test.date).toLocaleString('pt-BR')}\n`;
@@ -2592,32 +2592,32 @@ function generatePDFContent(tests, options) {
     content += `│  └─ Tempo Médio: ${test.avg_response}ms\n`;
     content += '│\n';
   });
-  
+
   content += '└─────────────────────────────────────────────────────────────────\n\n';
-  
+
   // Analysis section
   if (options.includeRecommendations) {
     content += '┌─ ANÁLISE E RECOMENDAÇÕES\n';
     content += '│\n';
-    
+
     if (avgResponseTime > 500) {
       content += '│  ⚠️  ALERTA: Tempo de resposta médio elevado (>500ms)\n';
       content += '│     → Recomendação: Otimizar queries de banco e implementar cache\n';
       content += '│\n';
     }
-    
+
     if (avgErrorRate > 5) {
       content += '│  ❌ ALERTA: Taxa de erro acima do aceitável (>5%)\n';
       content += '│     → Recomendação: Implementar retry logic e circuit breaker\n';
       content += '│\n';
     }
-    
+
     if (successRate < 90) {
       content += '│  ⚠️  ALERTA: Taxa de sucesso abaixo de 90%\n';
       content += '│     → Recomendação: Investigar causas de falhas\n';
       content += '│\n';
     }
-    
+
     content += '│  💡 Recomendações Gerais:\n';
     content += '│     • Implementar CDN para assets estáticos\n';
     content += '│     • Configurar auto-scaling para alta demanda\n';
@@ -2626,11 +2626,11 @@ function generatePDFContent(tests, options) {
     content += '│\n';
     content += '└─────────────────────────────────────────────────────────────────\n\n';
   }
-  
+
   content += '═'.repeat(80) + '\n';
   content += 'Fim do Relatório - PerfMaster PRO\n';
   content += '═'.repeat(80) + '\n';
-  
+
   return content;
 }
 
@@ -2639,7 +2639,7 @@ function generateHTMLReport(tests, options) {
   const successRate = tests.length > 0 ? ((successTests / tests.length) * 100).toFixed(1) : 0;
   const avgResponseTime = tests.reduce((sum, t) => sum + t.avg_response, 0) / tests.length;
   const avgErrorRate = tests.reduce((sum, t) => sum + t.error_rate, 0) / tests.length;
-  
+
   let html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2723,14 +2723,14 @@ function generateHTMLReport(tests, options) {
   </div>
 </body>
 </html>`;
-  
+
   return html;
 }
 
 function generateCSVReport(tests, options) {
   // CSV Header
   let csv = 'Data/Hora,URL,Engine,Tipo de Teste,Usuários,Status,Diagnóstico,Taxa de Erro (%),Tempo Médio (ms)\n';
-  
+
   // Data rows
   tests.forEach(test => {
     const date = new Date(test.date).toLocaleString('pt-BR');
@@ -2738,7 +2738,7 @@ function generateCSVReport(tests, options) {
     const diagnostic = test.diagnostic.replace(/"/g, '""');
     csv += `"${date}","${url}","${test.engine}","${test.test_type}",${test.users},"${test.status}","${diagnostic}",${test.error_rate.toFixed(1)},${test.avg_response}\n`;
   });
-  
+
   // Add summary if requested
   if (options.includeComparisons) {
     csv += '\n';
@@ -2750,7 +2750,7 @@ function generateCSVReport(tests, options) {
     csv += `Taxa de Sucesso,${successRate}%\n`;
     csv += `Tempo Médio,${avgResponseTime}ms\n`;
   }
-  
+
   return csv;
 }
 
@@ -2782,10 +2782,10 @@ function initializeScheduler() {
   now.setHours(now.getHours() + 1);
   document.getElementById('scheduleDate').valueAsDate = now;
   document.getElementById('scheduleTime').value = now.toTimeString().slice(0, 5);
-  
+
   // Create schedule button
   document.getElementById('createScheduleBtn').addEventListener('click', createSchedule);
-  
+
   // Load scheduled tests
   updateScheduledTestsList();
 }
@@ -2797,12 +2797,12 @@ function createSchedule() {
   const time = document.getElementById('scheduleTime').value;
   const frequency = document.getElementById('scheduleFrequency').value;
   const config = document.getElementById('scheduleConfig').value;
-  
+
   if (!name || !date || !time) {
     showNotification('error', 'Por favor, preencha todos os campos obrigatórios');
     return;
   }
-  
+
   const schedule = {
     id: Date.now(),
     name,
@@ -2814,25 +2814,25 @@ function createSchedule() {
     enabled: true,
     created: new Date().toISOString()
   };
-  
+
   scheduledTests.push(schedule);
   updateScheduledTestsList();
-  
+
   // Clear form
   document.getElementById('scheduleTestName').value = '';
   document.getElementById('scheduleDescription').value = '';
-  
+
   showNotification('success', 'Teste agendado com sucesso!');
 }
 
 function updateScheduledTestsList() {
   const container = document.getElementById('scheduledTestsList');
-  
+
   if (scheduledTests.length === 0) {
     container.innerHTML = '<div class="empty-state">Nenhum teste agendado</div>';
     return;
   }
-  
+
   container.innerHTML = scheduledTests.map(test => `
     <div class="scheduled-test-item">
       <div class="scheduled-test-info">
@@ -2882,7 +2882,7 @@ function toggleSchedule(id) {
 
 function deleteSchedule(id) {
   if (!confirm('Tem certeza que deseja excluir este agendamento?')) return;
-  
+
   scheduledTests = scheduledTests.filter(t => t.id !== id);
   updateScheduledTestsList();
   showNotification('success', 'Agendamento excluído');
@@ -2903,40 +2903,40 @@ function showConfirmationModal(title, message, onConfirm) {
   const confirmBtn = document.getElementById('confirmationConfirm');
   const cancelBtn = document.getElementById('confirmationCancel');
   const closeBtn = document.getElementById('closeConfirmation');
-  
+
   titleEl.textContent = title;
   messageEl.textContent = message;
-  
+
   // Remove previous listeners
   const newConfirmBtn = confirmBtn.cloneNode(true);
   confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-  
+
   const newCancelBtn = cancelBtn.cloneNode(true);
   cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-  
+
   const newCloseBtn = closeBtn.cloneNode(true);
   closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
-  
+
   // Add new listeners
   newConfirmBtn.addEventListener('click', () => {
     modal.classList.remove('active');
     if (onConfirm) onConfirm();
   });
-  
+
   newCancelBtn.addEventListener('click', () => {
     modal.classList.remove('active');
   });
-  
+
   newCloseBtn.addEventListener('click', () => {
     modal.classList.remove('active');
   });
-  
+
   modal.addEventListener('click', (e) => {
     if (e.target.id === 'confirmationModal') {
       modal.classList.remove('active');
     }
   });
-  
+
   modal.classList.add('active');
 }
 
@@ -2966,17 +2966,17 @@ function showClearHistoryConfirmation() {
 function initializeAdvancedSettings() {
   const headersInput = document.getElementById('headersInput');
   const bodyInput = document.getElementById('bodyInput');
-  
+
   if (headersInput) {
     headersInput.addEventListener('input', () => validateJSON('headers', headersInput.value));
     headersInput.addEventListener('blur', () => validateJSON('headers', headersInput.value));
   }
-  
+
   if (bodyInput) {
     bodyInput.addEventListener('input', () => validateJSON('body', bodyInput.value));
     bodyInput.addEventListener('blur', () => validateJSON('body', bodyInput.value));
   }
-  
+
   // Initial validation (empty is valid)
   validateJSON('headers', '');
   validateJSON('body', '');
@@ -2986,7 +2986,7 @@ function validateJSON(type, value) {
   const input = document.getElementById(type + 'Input');
   const indicator = document.getElementById(type + 'Validation');
   const errorMsg = document.getElementById(type + 'Error');
-  
+
   // Empty is valid
   if (!value || value.trim() === '') {
     input.classList.remove('valid', 'invalid');
@@ -2998,17 +2998,17 @@ function validateJSON(type, value) {
     updateScriptDisplay();
     return true;
   }
-  
+
   try {
     const parsed = JSON.parse(value);
-    
+
     // Valid JSON
     input.classList.remove('invalid');
     input.classList.add('valid');
     indicator.className = 'validation-indicator valid';
     errorMsg.className = 'validation-message success';
     errorMsg.textContent = 'Valid JSON';
-    
+
     // Store in state
     testState.advanced[type] = parsed;
     updateScriptDisplay();
@@ -3020,7 +3020,7 @@ function validateJSON(type, value) {
     indicator.className = 'validation-indicator invalid';
     errorMsg.className = 'validation-message error';
     errorMsg.textContent = 'Invalid JSON format: ' + e.message;
-    
+
     // Clear state
     testState.advanced[type] = {};
     updateScriptDisplay();
@@ -3036,9 +3036,9 @@ document.querySelectorAll('.metric-value').forEach(el => {
 // Chart Functions
 function initializeCharts() {
   try {
-  // Initialize canvas contexts
-  const responseTimeCanvas = document.getElementById('responseTimeChart');
-  const throughputCanvas = document.getElementById('throughputChart');
+    // Initialize canvas contexts
+    const responseTimeCanvas = document.getElementById('responseTimeChart');
+    const throughputCanvas = document.getElementById('throughputChart');
 
     if (!responseTimeCanvas || !throughputCanvas) {
       console.warn('Canvas elements não encontrados. Gráficos podem não funcionar.');
@@ -3047,16 +3047,16 @@ function initializeCharts() {
 
     charts.responseTime = responseTimeCanvas.getContext('2d');
     charts.throughput = throughputCanvas.getContext('2d');
-    
+
     if (!charts.responseTime || !charts.throughput) {
       console.warn('Não foi possível obter contextos dos canvas.');
       return;
     }
-    
+
     // Set canvas size based on container
     resizeCanvas(responseTimeCanvas);
     resizeCanvas(throughputCanvas);
-    
+
     // Draw initial empty charts with theme-aware colors
     const responseColor = currentTheme === 'light' ? '#0891B2' : '#00D9FF';
     const throughputColor = '#10B981';
@@ -3072,35 +3072,35 @@ function resizeCanvas(canvas) {
   const container = canvas.parentElement;
   const dpr = window.devicePixelRatio || 1;
   const rect = container.getBoundingClientRect();
-  
+
   canvas.width = rect.width * dpr;
   canvas.height = rect.height * dpr;
   canvas.style.width = rect.width + 'px';
   canvas.style.height = rect.height + 'px';
-  
+
   const ctx = canvas.getContext('2d');
   ctx.scale(dpr, dpr);
 }
 
 function addChartData(timestamp, responseTime, throughput) {
   const maxPoints = 30;
-  
+
   testState.chartData.timestamps.push(timestamp);
   testState.chartData.responseTime.push(responseTime);
   testState.chartData.throughput.push(throughput);
-  
+
   // Keep only last 30 points
   if (testState.chartData.timestamps.length > maxPoints) {
     testState.chartData.timestamps.shift();
     testState.chartData.responseTime.shift();
     testState.chartData.throughput.shift();
   }
-  
+
   // Redraw charts with theme-aware colors
   if (charts.responseTime && charts.throughput) {
     const responseColor = currentTheme === 'light' ? '#0891B2' : '#00D9FF';
     const throughputColor = '#10B981';
-    
+
     drawChart(
       charts.responseTime,
       testState.chartData.timestamps,
@@ -3122,38 +3122,38 @@ function drawChart(ctx, timestamps, data, color, unit) {
   const canvas = ctx.canvas;
   const width = canvas.width / (window.devicePixelRatio || 1);
   const height = canvas.height / (window.devicePixelRatio || 1);
-  
+
   // Get theme colors
   const isLightTheme = currentTheme === 'light';
   const gridColor = isLightTheme ? '#E5E7EB' : '#2D3F5A';
   const textColor = isLightTheme ? '#64748B' : '#94A3B8';
-  
+
   // Clear canvas
   ctx.clearRect(0, 0, width, height);
-  
+
   if (data.length === 0) return;
-  
+
   const padding = 40;
   const chartWidth = width - padding * 2;
   const chartHeight = height - padding * 2;
-  
+
   // Find min/max for scaling
   const maxValue = Math.max(...data, 1);
   const minValue = Math.min(...data, 0);
   const range = maxValue - minValue || 1;
-  
+
   // Draw grid
   ctx.strokeStyle = gridColor;
   ctx.lineWidth = 1;
   const gridLines = 5;
-  
+
   for (let i = 0; i <= gridLines; i++) {
     const y = padding + (chartHeight / gridLines) * i;
     ctx.beginPath();
     ctx.moveTo(padding, y);
     ctx.lineTo(width - padding, y);
     ctx.stroke();
-    
+
     // Draw y-axis labels
     const value = Math.round(maxValue - (range / gridLines) * i);
     ctx.fillStyle = textColor;
@@ -3161,12 +3161,12 @@ function drawChart(ctx, timestamps, data, color, unit) {
     ctx.textAlign = 'right';
     ctx.fillText(value.toString(), padding - 10, y + 4);
   }
-  
+
   // Draw x-axis labels
   if (timestamps.length > 0) {
     const labelCount = Math.min(5, timestamps.length);
     const step = Math.max(1, Math.floor(timestamps.length / labelCount));
-    
+
     for (let i = 0; i < timestamps.length; i += step) {
       const x = padding + (chartWidth / (timestamps.length - 1 || 1)) * i;
       ctx.fillStyle = textColor;
@@ -3175,54 +3175,54 @@ function drawChart(ctx, timestamps, data, color, unit) {
       ctx.fillText(timestamps[i] + 's', x, height - padding + 20);
     }
   }
-  
+
   // Draw line
   if (data.length > 1) {
     ctx.strokeStyle = color;
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    
+
     ctx.beginPath();
-    
+
     for (let i = 0; i < data.length; i++) {
       const x = padding + (chartWidth / (data.length - 1)) * i;
       const normalizedValue = (data[i] - minValue) / range;
       const y = padding + chartHeight - (normalizedValue * chartHeight);
-      
+
       if (i === 0) {
         ctx.moveTo(x, y);
       } else {
         ctx.lineTo(x, y);
       }
     }
-    
+
     ctx.stroke();
-    
+
     // Draw area fill
     ctx.lineTo(width - padding, height - padding);
     ctx.lineTo(padding, height - padding);
     ctx.closePath();
-    
+
     const gradient = ctx.createLinearGradient(0, padding, 0, height - padding);
     gradient.addColorStop(0, color + '40');
     gradient.addColorStop(1, color + '00');
     ctx.fillStyle = gradient;
     ctx.fill();
-    
+
     // Draw points
     ctx.fillStyle = color;
     for (let i = 0; i < data.length; i++) {
       const x = padding + (chartWidth / (data.length - 1)) * i;
       const normalizedValue = (data[i] - minValue) / range;
       const y = padding + chartHeight - (normalizedValue * chartHeight);
-      
+
       ctx.beginPath();
       ctx.arc(x, y, 3, 0, Math.PI * 2);
       ctx.fill();
     }
   }
-  
+
   // Draw axes
   ctx.strokeStyle = gridColor;
   ctx.lineWidth = 2;
@@ -3245,17 +3245,17 @@ function hideCharts() {
 function initializeNumberSpinners() {
   // Add keyboard support for number inputs
   const numberInputs = document.querySelectorAll('input[type="number"]');
-  
+
   numberInputs.forEach(input => {
     // Get min/max/step values
     const min = parseFloat(input.getAttribute('min')) || -Infinity;
     const max = parseFloat(input.getAttribute('max')) || Infinity;
     const step = parseFloat(input.getAttribute('step')) || 1;
-    
+
     // Keyboard support (up/down arrows)
     input.addEventListener('keydown', (e) => {
       let value = parseFloat(input.value) || 0;
-      
+
       if (e.key === 'ArrowUp') {
         e.preventDefault();
         value = Math.min(value + step, max);
@@ -3268,12 +3268,12 @@ function initializeNumberSpinners() {
         input.dispatchEvent(new Event('input', { bubbles: true }));
       }
     });
-    
+
     // Validate on input
     input.addEventListener('input', () => {
       let value = parseFloat(input.value);
       if (isNaN(value)) return;
-      
+
       if (value > max) input.value = max;
       if (value < min) input.value = min;
     });
@@ -3285,14 +3285,14 @@ window.addEventListener('resize', () => {
   if (testState.isRunning && charts.responseTime && charts.throughput) {
     const responseTimeCanvas = document.getElementById('responseTimeChart');
     const throughputCanvas = document.getElementById('throughputChart');
-    
+
     resizeCanvas(responseTimeCanvas);
     resizeCanvas(throughputCanvas);
-    
+
     // Redraw with current data and theme-aware colors
     const responseColor = currentTheme === 'light' ? '#0891B2' : '#00D9FF';
     const throughputColor = '#10B981';
-    
+
     drawChart(
       charts.responseTime,
       testState.chartData.timestamps,
@@ -3347,7 +3347,7 @@ async function executePerformanceTest() {
     for (let step = 0; step < config.duration; step++) {
       // Calcula métricas
       const progress = (step + 1) / config.duration;
-      const currentUsers = step < config.rampup 
+      const currentUsers = step < config.rampup
         ? Math.floor((step / config.rampup) * config.vus)
         : config.vus;
 
@@ -3440,7 +3440,7 @@ function showToast(message, type = 'info') {
 }
 
 // Attach event listener quando página carregar
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const runButton = document.getElementById('run-test-btn');
   if (runButton && !runButton.hasAttribute('data-listener-attached')) {
     runButton.addEventListener('click', executePerformanceTest);
@@ -3453,3 +3453,1621 @@ document.addEventListener('DOMContentLoaded', function() {
 window.executePerformanceTest = executePerformanceTest;
 
 console.log('✅ PATCH: Test Execution - Carregado com sucesso!');
+
+// ============================================
+// 1. RECORDING IMPORTER CLASS
+// ============================================
+
+class RecordingImporter {
+  constructor() {
+    this.currentRecording = null;
+    this.analysisResult = null;
+  }
+
+  async importFile(file) {
+    return new Promise((resolve, reject) => {
+      if (!file) {
+        reject(new Error('Nenhum arquivo selecionado'));
+        return;
+      }
+
+      if (!file.name.endsWith('.json')) {
+        reject(new Error('Arquivo deve ser .json'));
+        return;
+      }
+
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        try {
+          const content = event.target.result;
+          const recording = JSON.parse(content);
+
+          const validation = this.validateRecording(recording);
+          if (!validation.isValid) {
+            reject(new Error(validation.error));
+            return;
+          }
+
+          this.currentRecording = recording;
+          this.analysisResult = this.analyzeRecording(recording);
+
+          resolve({
+            recording: this.currentRecording,
+            analysis: this.analysisResult
+          });
+        } catch (error) {
+          reject(new Error('Erro ao processar JSON: ' + error.message));
+        }
+      };
+
+      reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+      reader.readAsText(file);
+    });
+  }
+
+  validateRecording(recording) {
+    if (!recording || typeof recording !== 'object') {
+      return { isValid: false, error: 'Arquivo JSON inválido' };
+    }
+
+    const hasActions = Array.isArray(recording.actions);
+    const hasRequests = Array.isArray(recording.requests);
+
+    if (!hasActions && !hasRequests) {
+      return { isValid: false, error: 'Recording deve ter "actions" ou "requests"' };
+    }
+
+    return { isValid: true };
+  }
+
+  analyzeRecording(recording) {
+    const actions = recording.actions || [];
+    const requests = recording.requests || [];
+
+    const stats = {
+      totalActions: actions.length,
+      totalRequests: requests.length,
+      duration: this.calculateDuration(actions, requests),
+      recordedAt: recording.recordedAt || 'Não informado'
+    };
+
+    const actionTypes = this.countActionTypes(actions);
+    const requestMethods = this.countRequestMethods(requests);
+    const flowType = this.detectFlowType(actions, requests);
+    const domains = this.extractDomains(requests);
+    const mainEndpoints = this.identifyMainEndpoints(requests);
+
+    return { stats, actionTypes, requestMethods, flowType, domains, mainEndpoints };
+  }
+
+  calculateDuration(actions, requests) {
+    let maxTimestamp = 0;
+    actions.forEach(a => { if (a.timestamp > maxTimestamp) maxTimestamp = a.timestamp; });
+    requests.forEach(r => { if (r.timestamp > maxTimestamp) maxTimestamp = r.timestamp; });
+    return maxTimestamp;
+  }
+
+  countActionTypes(actions) {
+    const types = { click: 0, input: 0, scroll: 0, other: 0 };
+    actions.forEach(action => {
+      if (types.hasOwnProperty(action.type)) types[action.type]++;
+      else types.other++;
+    });
+    return types;
+  }
+
+  countRequestMethods(requests) {
+    const methods = { GET: 0, POST: 0, PUT: 0, DELETE: 0, PATCH: 0, OTHER: 0 };
+    requests.forEach(request => {
+      const method = (request.method || 'GET').toUpperCase();
+      if (methods.hasOwnProperty(method)) methods[method]++;
+      else methods.OTHER++;
+    });
+    return methods;
+  }
+
+  detectFlowType(actions, requests) {
+    const allSelectors = actions.map(a => a.selector || '').join(' ').toLowerCase();
+    const allUrls = requests.map(r => r.url || '').join(' ').toLowerCase();
+    const content = allSelectors + ' ' + allUrls;
+
+    const patterns = [
+      { name: 'Login/Autenticação', keywords: ['login', 'signin', 'auth', 'password', 'email', 'token'] },
+      { name: 'Cadastro', keywords: ['signup', 'register', 'cadastro', 'create-account', 'nome', 'cpf'] },
+      { name: 'E-commerce/Checkout', keywords: ['cart', 'checkout', 'payment', 'carrinho', 'compra', 'order'] },
+      { name: 'Busca/Pesquisa', keywords: ['search', 'busca', 'query', 'filter', 'pesquisa'] },
+      { name: 'Formulário', keywords: ['form', 'submit', 'input', 'textarea'] }
+    ];
+
+    for (const pattern of patterns) {
+      const matchCount = pattern.keywords.filter(kw => content.includes(kw)).length;
+      if (matchCount >= 2) return pattern.name;
+    }
+
+    return 'Navegação Geral';
+  }
+
+  extractDomains(requests) {
+    const domains = new Set();
+    requests.forEach(request => {
+      try {
+        if (request.url) {
+          const url = new URL(request.url);
+          domains.add(url.hostname);
+        }
+      } catch { }
+    });
+    return Array.from(domains);
+  }
+
+  identifyMainEndpoints(requests) {
+    const endpoints = {};
+    requests.forEach(request => {
+      try {
+        if (request.url) {
+          const url = new URL(request.url);
+          const path = url.pathname;
+          const method = request.method || 'GET';
+          const key = `${method} ${path}`;
+          if (!endpoints[key]) {
+            endpoints[key] = { method, path, count: 0, example: request.url };
+          }
+          endpoints[key].count++;
+        }
+      } catch { }
+    });
+    return Object.values(endpoints).sort((a, b) => b.count - a.count).slice(0, 10);
+  }
+
+  generateK6Script() {
+    if (!this.currentRecording) throw new Error('Nenhum recording carregado');
+
+    const requests = this.currentRecording.requests || [];
+    const analysis = this.analysisResult;
+
+    let script = '';
+    script += `// ============================================\n`;
+    script += `// Script K6 - Gerado pelo Social Core\n`;
+    script += `// Tipo de Fluxo: ${analysis.flowType}\n`;
+    script += `// Data: ${new Date().toISOString()}\n`;
+    script += `// ============================================\n\n`;
+    script += `import http from 'k6/http';\n`;
+    script += `import { check, sleep } from 'k6';\n`;
+    script += `import { Rate } from 'k6/metrics';\n\n`;
+    script += `const errorRate = new Rate('errors');\n\n`;
+    script += `export const options = {\n`;
+    script += `  stages: [\n`;
+    script += `    { duration: '30s', target: 10 },\n`;
+    script += `    { duration: '1m', target: 10 },\n`;
+    script += `    { duration: '30s', target: 0 },\n`;
+    script += `  ],\n`;
+    script += `  thresholds: {\n`;
+    script += `    http_req_duration: ['p(95)<500'],\n`;
+    script += `    errors: ['rate<0.1'],\n`;
+    script += `  },\n`;
+    script += `};\n\n`;
+    script += `const headers = {\n`;
+    script += `  'Content-Type': 'application/json',\n`;
+    script += `  'Accept': 'application/json',\n`;
+    script += `};\n\n`;
+    script += `export default function() {\n`;
+
+    if (requests.length === 0) {
+      script += `  const response = http.get('https://example.com');\n`;
+      script += `  check(response, { 'status 200': (r) => r.status === 200 });\n`;
+    } else {
+      let lastTimestamp = 0;
+      requests.forEach((req, index) => {
+        const waitTime = (req.timestamp - lastTimestamp) / 1000;
+        if (waitTime > 0.5 && index > 0) {
+          script += `  sleep(${Math.min(waitTime, 5).toFixed(1)});\n`;
+        }
+        const method = (req.method || 'GET').toLowerCase();
+        const safeUrl = req.url.replace(/'/g, "\\'");
+        if (method === 'get') {
+          script += `  const res${index + 1} = http.get('${safeUrl}', { headers });\n`;
+        } else if (method === 'post') {
+          script += `  const res${index + 1} = http.post('${safeUrl}', JSON.stringify({}), { headers });\n`;
+        } else {
+          script += `  const res${index + 1} = http.${method}('${safeUrl}', null, { headers });\n`;
+        }
+        script += `  check(res${index + 1}, { 'status 2xx': (r) => r.status >= 200 && r.status < 300 });\n`;
+        script += `  errorRate.add(res${index + 1}.status >= 400);\n`;
+        lastTimestamp = req.timestamp;
+      });
+    }
+
+    script += `  sleep(1);\n`;
+    script += `}\n`;
+    return script;
+  }
+
+  generateJMeterScript() {
+    if (!this.currentRecording) throw new Error('Nenhum recording carregado');
+
+    const requests = this.currentRecording.requests || [];
+    const analysis = this.analysisResult;
+
+    let jmx = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    jmx += `<jmeterTestPlan version="1.2" properties="5.0">\n`;
+    jmx += `  <hashTree>\n`;
+    jmx += `    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Social Core - ${analysis.flowType}">\n`;
+    jmx += `      <stringProp name="TestPlan.comments">Gerado pelo Social Core</stringProp>\n`;
+    jmx += `    </TestPlan>\n`;
+    jmx += `    <hashTree>\n`;
+    jmx += `      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Usuarios">\n`;
+    jmx += `        <stringProp name="ThreadGroup.num_threads">10</stringProp>\n`;
+    jmx += `        <stringProp name="ThreadGroup.ramp_time">30</stringProp>\n`;
+    jmx += `      </ThreadGroup>\n`;
+    jmx += `      <hashTree>\n`;
+
+    requests.forEach((req, index) => {
+      try {
+        const url = new URL(req.url);
+        const method = (req.method || 'GET').toUpperCase();
+        jmx += `        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Request ${index + 1}">\n`;
+        jmx += `          <stringProp name="HTTPSampler.domain">${url.hostname}</stringProp>\n`;
+        jmx += `          <stringProp name="HTTPSampler.path">${url.pathname}</stringProp>\n`;
+        jmx += `          <stringProp name="HTTPSampler.method">${method}</stringProp>\n`;
+        jmx += `        </HTTPSamplerProxy>\n`;
+        jmx += `        <hashTree/>\n`;
+      } catch { }
+    });
+
+    jmx += `      </hashTree>\n`;
+    jmx += `    </hashTree>\n`;
+    jmx += `  </hashTree>\n`;
+    jmx += `</jmeterTestPlan>\n`;
+    return jmx;
+  }
+
+  clear() {
+    this.currentRecording = null;
+    this.analysisResult = null;
+  }
+}
+
+// ============================================
+// 2. RECORDING IMPORTER UI - CORRIGIDO
+// ============================================
+
+const RecordingImporterUI = {
+  importer: null,
+  modalElement: null,
+  currentScript: null,
+  currentFilename: null,
+  currentScriptType: null,
+
+  init() {
+    this.importer = new RecordingImporter();
+    this.createModal();
+    this.attachButtonListener();
+    console.log('✅ Recording Importer inicializado');
+  },
+
+  // Cria o modal próprio (não usa o toolModal genérico)
+  createModal() {
+    // Remove modal antigo se existir
+    const existingModal = document.getElementById('recording-importer-modal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'recording-importer-modal';
+    modal.className = 'recording-modal-overlay';
+    modal.innerHTML = `
+      <div class="recording-modal">
+        <div class="recording-modal-header">
+          <div class="recording-modal-title">
+            <h3 style="color:white">Importar Gravação</h3>
+          </div>
+          <button class="recording-modal-close" id="recording-modal-close">✕</button>
+        </div>
+        <div class="recording-modal-body" id="recording-modal-body">
+          <!-- Conteúdo será inserido aqui -->
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+    this.modalElement = modal;
+
+    // Evento de fechar no X
+    document.getElementById('recording-modal-close').addEventListener('click', () => {
+      this.closeModal();
+    });
+
+    // Evento de fechar clicando fora
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        this.closeModal();
+      }
+    });
+
+    // Evento de fechar com ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.modalElement.classList.contains('show')) {
+        this.closeModal();
+      }
+    });
+
+    // Adiciona estilos
+    this.addStyles();
+  },
+
+  addStyles() {
+    if (document.getElementById('recording-importer-styles')) return;
+
+    const styles = document.createElement('style');
+    styles.id = 'recording-importer-styles';
+    styles.textContent = `
+      .recording-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .recording-modal-overlay.show {
+        display: flex;
+      }
+
+      .recording-modal {
+        background: #0b1220;
+        color: #e5e7eb;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        animation: modalSlideIn 0.3s ease;
+      }
+
+      @keyframes modalSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .recording-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--color-border, #333);
+        background: var(--color-surface-secondary, #16213e);
+      }
+
+      .recording-modal-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .recording-modal-icon {
+        font-size: 24px;
+      }
+
+      .recording-modal-title h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--color-text, #fff);
+      }
+
+      .recording-modal-close {
+        background: none;
+        border: none;
+        color: var(--color-text-secondary, #888);
+        font-size: 20px;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 6px;
+        transition: all 0.2s;
+        line-height: 1;
+      }
+
+      .recording-modal-close:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+      }
+
+      .recording-modal-body {
+        padding: 20px;
+        overflow-y: auto;
+        max-height: calc(80vh - 70px);
+        background: #0b1220;  
+      }
+
+      /* Upload Area */
+      .upload-section {
+        margin-bottom: 20px;
+      }
+
+      .upload-section-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--color-text, #fff);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .upload-dropzone {
+        border: 2px dashed var(--color-border, #444);
+        border-radius: 12px;
+        padding: 40px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .upload-dropzone:hover {
+        border-color: var(--color-primary, #00d9ff);
+        background: #1a2847;
+      }
+
+      .upload-dropzone.dragover {
+        border-color: var(--color-primary, #00d9ff);
+        background: rgba(0, 217, 255, 0.1);
+        transform: scale(1.02);
+      }
+
+      .upload-dropzone.success {
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.1);
+      }
+
+      .upload-dropzone.error {
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+      }
+
+      .upload-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+      }
+
+      .upload-text {
+        font-size: 16px;
+        margin-bottom: 8px;
+      }
+
+      .upload-hint {
+        font-size: 13px;
+      }
+
+      /* Analysis Section */
+      .analysis-section {
+        display: none;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--color-border, #333);
+      }
+
+      .analysis-section.show {
+        display: block;
+      }
+
+      .analysis-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--color-text, #fff);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .stat-card {
+        background: var(--color-background, #0f0f1a);
+        padding: 16px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--color-primary, #00d9ff);
+      }
+
+      .stat-label {
+        font-size: 11px;
+        color: var(--color-text-tertiary, #666);
+        margin-top: 4px;
+        text-transform: uppercase;
+      }
+
+      .flow-badge {
+        display: inline-block;
+        background: var(--color-primary, #00d9ff);
+        color: #000;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+
+      /* Generate Section */
+      .generate-section {
+        display: none;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--color-border, #333);
+      }
+
+      .generate-section.show {
+        display: block;
+      }
+
+      .generate-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--color-text, #fff);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .generate-buttons {
+        display: flex;
+        gap: 12px;
+      }
+
+      .generate-btn {
+        flex: 1;
+        padding: 14px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s;
+      }
+
+      .generate-btn-k6 {
+        background: linear-gradient(135deg, #7c3aed, #5b21b6);
+        color: white;
+      }
+
+      .generate-btn-k6:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+      }
+
+      .generate-btn-jmeter {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+      }
+
+      .generate-btn-jmeter:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+      }
+
+      /* Preview Section */
+      .preview-section {
+        display: none;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--color-border, #333);
+      }
+
+      .preview-section.show {
+        display: block;
+      }
+
+      .preview-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .preview-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--color-text, #fff);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .preview-actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .preview-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+      }
+
+      .preview-btn-copy {
+        background: var(--color-surface-secondary, #16213e);
+        color: var(--color-text, #fff);
+        border: 1px solid var(--color-border, #333);
+      }
+
+      .preview-btn-copy:hover {
+        background: var(--color-border, #333);
+      }
+
+      .preview-btn-download {
+        background: #10b981;
+        color: white;
+      }
+
+      .preview-btn-download:hover {
+        background: #059669;
+      }
+
+      .preview-code {
+        background: var(--color-background, #0f0f1a);
+        border-radius: 8px;
+        padding: 16px;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        color: var(--color-text, #fff);
+        overflow-x: auto;
+        max-height: 250px;
+        overflow-y: auto;
+        white-space: pre;
+      }
+    `;
+    document.head.appendChild(styles);
+  },
+
+  attachButtonListener() {
+    // Listener para o botão na área de Test Execution
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'open-recording-importer' ||
+        e.target.closest('#open-recording-importer')) {
+        this.openModal();
+      }
+    });
+
+    // Listener para o card em Tools (caso exista)
+    const toolCard = document.querySelector('[data-tool="recording-importer"]');
+    if (toolCard) {
+      const btn = toolCard.querySelector('.btn');
+      if (btn) {
+        btn.addEventListener('click', () => this.openModal());
+      }
+    }
+  },
+
+  openModal() {
+    const body = document.getElementById('recording-modal-body');
+    body.innerHTML = this.getModalContent();
+    this.modalElement.classList.add('show');
+    this.attachUploadListeners();
+  },
+
+  closeModal() {
+    this.modalElement.classList.remove('show');
+    this.importer.clear();
+  },
+
+  getModalContent() {
+    return `
+      <!-- Upload Section -->
+      <div class="upload-section">
+        <div class="upload-dropzone" id="upload-dropzone">
+          <div class="upload-icon">📄</div>
+          <div class="upload-text">Arraste o arquivo da gravação aqui</div>
+          <div class="upload-hint">ou clique para selecionar</div>
+          <input type="file" id="file-input" accept=".json" hidden>
+        </div>
+      </div>
+
+      <!-- Analysis Section -->
+      <div class="analysis-section" id="analysis-section">
+        <div class="analysis-title">
+          <span>📊</span>
+          <span>Análise do Recording</span>
+        </div>
+        <div id="analysis-content"></div>
+      </div>
+
+      <!-- Generate Section -->
+      <div class="generate-section" id="generate-section">
+        <div class="generate-title">
+          <span>⚡</span>
+          <span>Gerar Scripts de Teste</span>
+        </div>
+        <div class="generate-buttons">
+          <button class="generate-btn generate-btn-k6" id="generate-k6">
+            <span>📜</span>
+            <span>Gerar K6</span>
+          </button>
+          <button class="generate-btn generate-btn-jmeter" id="generate-jmeter">
+            <span>📜</span>
+            <span>Gerar JMeter</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Section -->
+      <div class="preview-section" id="preview-section">
+        <div class="preview-header">
+          <div class="preview-title">
+            <span>📝</span>
+            <span>Preview do Script</span>
+          </div>
+          <div class="preview-actions">
+            <button class="preview-btn preview-btn-copy" id="copy-script">
+              <span>📋</span>
+              <span>Copiar</span>
+            </button>
+            <button class="preview-btn preview-btn-download" id="download-script">
+              <span>⬇️</span>
+              <span>Download</span>
+            </button>
+          </div>
+        </div>
+        <pre class="preview-code" id="preview-code"></pre>
+      </div>
+    `;
+  },
+
+  attachUploadListeners() {
+    const dropzone = document.getElementById('upload-dropzone');
+    const fileInput = document.getElementById('file-input');
+
+    // Click para abrir file picker
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    // Seleção de arquivo
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        this.handleFile(e.target.files[0]);
+      }
+    });
+
+    // Drag over
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    // Drag leave
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragover');
+    });
+
+    // Drop
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length > 0) {
+        this.handleFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    // Botões de geração
+    document.getElementById('generate-k6').addEventListener('click', () => this.generateScript('k6'));
+    document.getElementById('generate-jmeter').addEventListener('click', () => this.generateScript('jmeter'));
+
+    // Botões de preview
+    document.getElementById('copy-script').addEventListener('click', () => this.copyScript());
+    document.getElementById('download-script').addEventListener('click', () => this.downloadScript());
+  },
+
+  async handleFile(file) {
+    const dropzone = document.getElementById('upload-dropzone');
+
+    try {
+      dropzone.innerHTML = `
+        <div class="upload-icon">⏳</div>
+        <div class="upload-text">Processando...</div>
+        <div class="upload-hint">${file.name}</div>
+      `;
+
+      const result = await this.importer.importFile(file);
+
+      dropzone.classList.add('success');
+      dropzone.innerHTML = `
+        <div class="upload-icon">✅</div>
+        <div class="upload-text">${file.name}</div>
+        <div class="upload-hint">Arquivo carregado com sucesso!</div>
+      `;
+
+      this.showAnalysis(result.analysis);
+      document.getElementById('generate-section').classList.add('show');
+
+    } catch (error) {
+      dropzone.classList.add('error');
+      dropzone.innerHTML = `
+        <div class="upload-icon">❌</div>
+        <div class="upload-text">Erro ao carregar</div>
+        <div class="upload-hint">${error.message}</div>
+        <input type="file" id="file-input" accept=".json" hidden>
+      `;
+
+      setTimeout(() => {
+        dropzone.classList.remove('error');
+        dropzone.innerHTML = `
+          <div class="upload-icon">📄</div>
+          <div class="upload-text">Arraste o arquivo JSON aqui</div>
+          <div class="upload-hint">ou clique para selecionar</div>
+          <input type="file" id="file-input" accept=".json" hidden>
+        `;
+        this.attachUploadListeners();
+      }, 3000);
+    }
+  },
+
+  showAnalysis(analysis) {
+    const section = document.getElementById('analysis-section');
+    const content = document.getElementById('analysis-content');
+
+    section.classList.add('show');
+
+    const durationSec = (analysis.stats.duration / 1000).toFixed(1);
+
+    content.innerHTML = `
+      <div class="flow-badge">${analysis.flowType}</div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">${analysis.stats.totalActions}</div>
+          <div class="stat-label">Ações</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${analysis.stats.totalRequests}</div>
+          <div class="stat-label">Requests</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${durationSec}s</div>
+          <div class="stat-label">Duração</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${analysis.domains.length}</div>
+          <div class="stat-label">Domínios</div>
+        </div>
+      </div>
+    `;
+  },
+
+  generateScript(type) {
+    try {
+      let script = '';
+      let filename = '';
+
+      if (type === 'k6') {
+        script = this.importer.generateK6Script();
+        filename = 'test-script.js';
+        this.currentScriptType = 'javascript';
+      } else {
+        script = this.importer.generateJMeterScript();
+        filename = 'test-plan.jmx';
+        this.currentScriptType = 'xml';
+      }
+
+      this.currentScript = script;
+      this.currentFilename = filename;
+
+      document.getElementById('preview-section').classList.add('show');
+      document.getElementById('preview-code').textContent = script;
+      document.getElementById('preview-section').scrollIntoView({ behavior: 'smooth' });
+
+    } catch (error) {
+      alert('Erro ao gerar script: ' + error.message);
+    }
+  },
+
+  copyScript() {
+    if (!this.currentScript) return;
+
+    navigator.clipboard.writeText(this.currentScript).then(() => {
+      const btn = document.getElementById('copy-script');
+      btn.innerHTML = '<span>✅</span><span>Copiado!</span>';
+      setTimeout(() => {
+        btn.innerHTML = '<span>📋</span><span>Copiar</span>';
+      }, 2000);
+    });
+  },
+
+  downloadScript() {
+    if (!this.currentScript) return;
+
+    const mimeType = this.currentScriptType === 'javascript' ? 'text/javascript' : 'application/xml';
+    const blob = new Blob([this.currentScript], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = this.currentFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    const btn = document.getElementById('download-script');
+    btn.innerHTML = '<span>✅</span><span>Baixado!</span>';
+    setTimeout(() => {
+      btn.innerHTML = '<span>⬇️</span><span>Download</span>';
+    }, 2000);
+  }
+};
+
+// ============================================
+// 3. INICIALIZAÇÃO
+// ============================================
+
+document.addEventListener('DOMContentLoaded', function () {
+  RecordingImporterUI.init();
+});
+
+// Fallback para páginas já carregadas
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  setTimeout(() => RecordingImporterUI.init(), 100);
+}
+
+window.RecordingImporter = RecordingImporter;
+window.RecordingImporterUI = RecordingImporterUI;
+
+// ============================================================
+// IMPORTAÇÃO DE GRAVAÇÃO - CONFIGURAÇÃO AUTOMÁTICA V3 (FINAL)
+// ============================================================
+
+// Desabilita o RecordingImporterUI antigo para evitar duplo modal
+if (window.RecordingImporterUI) {
+  console.log('🔧 Desabilitando RecordingImporterUI antigo...');
+  window.RecordingImporterUI.init = function () { }; // Desativa
+}
+
+// Função principal para importar e configurar automaticamente
+async function handleRecordingImportAuto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // IMPORTANTE: Limpa o input para permitir reimportar o mesmo arquivo
+  event.target.value = '';
+
+  try {
+    showNotification('info', 'Processando gravação...');
+
+    // 1. Lê e parseia o arquivo
+    const recordingData = await parseRecordingFileAuto(file);
+
+    // 2. Extrai configurações do teste COM ANÁLISE DE FLUXO
+    const testConfig = extractTestConfigFromRecording(recordingData);
+
+    // 3. Preenche o formulário automaticamente
+    populateTestFormFromRecording(testConfig);
+
+    // 4. Atualiza o script preview
+    updateScriptDisplay();
+
+    // 5. Mostra modal de sucesso (substitui toast)
+    showImportSuccessModal(testConfig, recordingData);
+
+  } catch (error) {
+    showNotification('error', `Erro ao processar gravação: ${error.message}`);
+    console.error('Erro detalhado:', error);
+  }
+}
+
+// Parse do arquivo de gravação
+function parseRecordingFileAuto(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        const content = e.target.result;
+        const data = JSON.parse(content);
+
+        // Valida estrutura do recording
+        if (!data.requests || !Array.isArray(data.requests)) {
+          reject(new Error('Arquivo de gravação inválido. Deve conter "requests".'));
+          return;
+        }
+
+        if (data.requests.length === 0) {
+          reject(new Error('Gravação não contém requisições.'));
+          return;
+        }
+
+        resolve(data);
+      } catch (err) {
+        reject(new Error('Arquivo JSON inválido.'));
+      }
+    };
+
+    reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+    reader.readAsText(file);
+  });
+}
+
+// Extrai configurações do teste baseado na gravação COM ANÁLISE DE FLUXO
+function extractTestConfigFromRecording(recording) {
+  const config = {
+    method: 'GET',
+    url: '',
+    headers: {},
+    body: '',
+    vus: 10,
+    duration: 30,
+    rampup: 10,
+    thinkTime: 1,
+    // Metadados extras para o modal
+    totalRequests: 0,
+    mainRequests: 0,
+    detectedFlow: []
+  };
+
+  const requests = recording.requests;
+
+  if (requests.length === 0) {
+    throw new Error('Gravação não contém requisições');
+  }
+
+  config.totalRequests = requests.length;
+
+  // Filtra requisições principais (remove analytics, tracking, etc.)
+  const mainRequests = requests.filter(req => {
+    const url = req.url.toLowerCase();
+    // Remove requisições de tracking/analytics
+    return !url.includes('analytics') &&
+      !url.includes('google.com') &&
+      !url.includes('facebook.com') &&
+      !url.includes('clarity.ms') &&
+      !url.includes('plausible') &&
+      !url.includes('signaler') &&
+      !url.includes('datadog') &&
+      !url.includes('miro.com') &&
+      !url.includes('recaptcha') &&
+      !url.includes('gtm') &&
+      req.type !== 'subframe';
+  });
+
+  config.mainRequests = mainRequests.length;
+
+  // ANÁLISE DE FLUXO: Detecta sequência de navegação
+  const detectedFlow = analyzeRequestFlow(mainRequests);
+  config.detectedFlow = detectedFlow;
+
+  // Pega a PRIMEIRA PÁGINA/ENDPOINT do fluxo (não a primeira request)
+  const mainRequest = detectedFlow[0] || mainRequests[0] || requests[0];
+
+  // Extrai URL e método
+  config.url = mainRequest.url;
+  config.method = mainRequest.method || 'GET';
+
+  // Headers vazios por padrão (pode adicionar lógica customizada)
+  config.headers = {};
+
+  // Body vazio (gravações não incluem body normalmente)
+  config.body = '';
+
+  // Configura VUS/Duration baseado no tamanho da gravação
+  const totalRequests = mainRequests.length > 0 ? mainRequests.length : requests.length;
+  const durationSeconds = recording.duration ? Math.ceil(recording.duration / 1000) : 30;
+
+  // VUS: 1 a cada 5 requests, entre 5 e 50
+  config.vus = Math.min(Math.max(5, Math.ceil(totalRequests / 5)), 50);
+
+  // Duration: baseado no tempo de gravação, entre 30s e 300s
+  config.duration = Math.min(Math.max(30, durationSeconds * 2), 300);
+
+  // Ramp-up: 20% do duration
+  config.rampup = Math.ceil(config.duration * 0.2);
+
+  // Think time: baseado no tempo entre requisições
+  if (requests.length > 1) {
+    const times = requests.map(r => r.timestamp).sort((a, b) => a - b);
+    const intervals = [];
+    for (let i = 1; i < Math.min(times.length, 10); i++) {
+      intervals.push(times[i] - times[i - 1]);
+    }
+    const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length / 1000;
+    config.thinkTime = Math.max(0.5, Math.min(avgInterval, 5));
+  }
+
+  return config;
+}
+
+// NOVA: Analisa fluxo de navegação para pegar páginas principais
+function analyzeRequestFlow(requests) {
+  const flow = [];
+  const seenDomains = new Set();
+
+  // Ordena por timestamp
+  const sorted = [...requests].sort((a, b) => a.timestamp - b.timestamp);
+
+  for (const req of sorted) {
+    try {
+      const urlObj = new URL(req.url);
+      const domain = urlObj.hostname;
+      const path = urlObj.pathname;
+
+      // Pega apenas a primeira request de cada domínio/caminho principal
+      const key = `${domain}${path.split('/')[1] || ''}`;
+
+      if (!seenDomains.has(key)) {
+        seenDomains.add(key);
+        flow.push({
+          url: req.url,
+          method: req.method,
+          timestamp: req.timestamp,
+          domain: domain,
+          path: path
+        });
+
+        // Limita a 5 principais endpoints do fluxo
+        if (flow.length >= 5) break;
+      }
+    } catch (e) {
+      // URL inválida, ignora
+      continue;
+    }
+  }
+
+  return flow;
+}
+
+// Preenche o formulário com as configs extraídas
+function populateTestFormFromRecording(config) {
+  // Target Endpoint - Método HTTP
+  const methodSelect = document.getElementById('methodSelect');
+  if (methodSelect) methodSelect.value = config.method;
+
+  // Target Endpoint - URL
+  const urlInput = document.getElementById('urlInput');
+  if (urlInput) {
+    urlInput.value = config.url;
+    // Dispara evento para validação/feedback visual
+    urlInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  // VUS (Usuários virtuais)
+  const vusInput = document.getElementById('usersInput');
+  if (vusInput) vusInput.value = config.vus;
+
+  // Duration (segundos)
+  const durationInput = document.getElementById('durationInput');
+  if (durationInput) durationInput.value = config.duration;
+
+  // Ramp-up
+  const rampupInput = document.getElementById('rampUpInput');
+  if (rampupInput) rampupInput.value = config.rampup;
+
+  // Think Time (ADVANCED)
+  const thinkTimeInput = document.getElementById('thinkTimeInput');
+  if (thinkTimeInput) thinkTimeInput.value = config.thinkTime.toFixed(1);
+
+  // Headers (limpa, pois gravação não tem headers úteis)
+  const headersTextarea = document.getElementById('headersInput');
+  if (headersTextarea) {
+    headersTextarea.value = '';
+  }
+
+  // Body (limpa)
+  const bodyTextarea = document.getElementById('bodyInput');
+  if (bodyTextarea) {
+    bodyTextarea.value = '';
+  }
+
+  // Abre o bloco ADVANCED automaticamente
+  const advancedDetails = document.querySelector('details.advanced-section');
+  if (advancedDetails) advancedDetails.open = true;
+}
+
+function showImportSuccessModal(config, recording) {
+  const modal = document.getElementById('importSuccessModal');
+  const detailsContainer = document.getElementById('importSuccessDetails');
+  
+  if (!modal || !detailsContainer) {
+    console.warn('Modal importSuccessModal não encontrado, criando...');
+    createImportSuccessModal();
+    setTimeout(() => showImportSuccessModal(config, recording), 100);
+    return;
+  }
+  
+  // URL completa para exibição
+  const shortUrl = config.url.length > 80 ? 
+    config.url.substring(0, 77) + '...' : 
+    config.url;
+  
+  // HTML com bolinhas coloridas
+  const detailsHTML = `
+    <div class="import-detail-item">
+      <div class="import-detail-icon" style="background: rgba(0, 217, 255, 0.1); color: #00D9FF;">
+        🌐
+      </div>
+      <div class="import-detail-content">
+        <div class="import-detail-label">Endpoint Principal</div>
+        <div class="import-detail-value">
+          <span class="import-detail-badge">${config.method}</span> 
+          <span class="import-url-text">${shortUrl}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="import-detail-item">
+        <div class="import-detail-icon" style="background: rgba(245, 158, 11, 0.1); color: #F59E0B;">
+          👥
+        </div>
+        <div class="import-detail-content">
+          <div class="import-detail-label">Usuários Virtuais</div>
+          <div class="import-detail-value">${config.vus} VUS</div>
+        </div>
+      </div>
+      
+      <div class="import-detail-item">
+        <div class="import-detail-icon" style="background: rgba(16, 185, 129, 0.1); color: #10B981;">
+          ⏱️
+        </div>
+        <div class="import-detail-content">
+          <div class="import-detail-label">Duração</div>
+          <div class="import-detail-value">${config.duration}s</div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="import-detail-item">
+        <div class="import-detail-icon" style="background: rgba(139, 92, 246, 0.1); color: #8B5CF6;">
+          🚀
+        </div>
+        <div class="import-detail-content">
+          <div class="import-detail-label">Ramp-up</div>
+          <div class="import-detail-value">${config.rampup}s</div>
+        </div>
+      </div>
+      
+      <div class="import-detail-item">
+        <div class="import-detail-icon" style="background: rgba(236, 72, 153, 0.1); color: #EC4899;">
+          💭
+        </div>
+        <div class="import-detail-content">
+          <div class="import-detail-label">Think Time</div>
+          <div class="import-detail-value">${config.thinkTime.toFixed(1)}s</div>
+        </div>
+      </div>
+    </div>
+    
+    ${config.detectedFlow.length > 0 ? `
+    <div class="import-detail-item">
+      <div class="import-detail-icon" style="background: rgba(168, 85, 247, 0.1); color: #A855F7;">
+        🔄
+      </div>
+      <div class="import-detail-content">
+        <div class="import-detail-label">Fluxo de Navegação Detectado</div>
+        <div class="import-detail-value" style="margin-top: 10px;">
+          ${config.detectedFlow.map((step, i) => {
+            // Define cor da bolinha por método
+            let ballColor;
+            if (step.method === 'GET') {
+              ballColor = '#10B981';
+            } else if (step.method === 'POST') {
+              ballColor = '#3B82F6';
+            } else if (step.method === 'PUT' || step.method === 'PATCH') {
+              ballColor = '#F59E0B';
+            } else if (step.method === 'DELETE') {
+              ballColor = '#EF4444';
+            } else {
+              ballColor = '#8B5CF6';
+            }
+            
+            return `
+              <div class="import-flow-step">
+                <span class="import-flow-number" style="background-color: ${ballColor}; color: #FFFFFF;">${i + 1}</span>
+                <span class="import-flow-method" style="color: ${ballColor};">${step.method}</span>
+                <span class="import-flow-url" title="${step.url}">${step.url}</span>
+              </div>
+            `;
+          }).join('')}
+          ${config.detectedFlow.length > 5 ? 
+            '<div style="color: var(--color-text-secondary); font-size: 12px; margin-top: 8px; text-align: center; font-style: italic;">...e mais endpoints detectados</div>' 
+            : ''}
+        </div>
+      </div>
+    </div>
+  ` : ''}
+
+  `;
+  
+  detailsContainer.innerHTML = detailsHTML;
+  
+  // Mostra modal
+  modal.style.display = 'flex';
+  
+  // Bind close
+  const closeBtn = document.getElementById('closeImportSuccess');
+  const closeFooterBtn = document.getElementById('closeImportSuccessBtn');
+  
+  const closeModal = () => {
+    modal.style.display = 'none';
+  };
+  
+  if (closeBtn) closeBtn.onclick = closeModal;
+  if (closeFooterBtn) closeFooterBtn.onclick = closeModal;
+  
+  modal.onclick = (e) => {
+    if (e.target === modal) closeModal();
+  };
+}
+
+// Cria o modal com cores corretas + bolinhas
+function createImportSuccessModal() {
+  if (document.getElementById('importSuccessModal')) return;
+  
+  const modalHTML = `
+    <div id="importSuccessModal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border-radius: 12px 12px 0 0;">
+          <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            Gravação Importada com Sucesso!
+          </h2>
+          <button class="modal-close" id="closeImportSuccess" style="color: white;">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 24px;">
+          <div style="background: #F0FDF4; border-left: 4px solid #10B981; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+            <p style="margin: 0; color: #065F46; font-weight: 500;">
+              📊 Configuração detectada e aplicada automaticamente
+            </p>
+          </div>
+          
+          <div id="importSuccessDetails" style="display: grid; gap: 12px;"></div>
+          
+          <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--color-border);">
+            <p style="margin: 0 0 8px 0; font-size: 13px; color: var(--color-text-secondary);">
+              💡 <strong>Próximo passo:</strong> Revise as configurações e clique em "Executar Teste"
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer" style="justify-content: center;">
+          <button class="btn btn-launch" id="closeImportSuccessBtn" style="min-width: 150px;">
+            Entendi
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+  
+  // CSS com cores corretas + bolinhas
+  const style = document.createElement('style');
+style.textContent = `
+  .import-detail-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    background: #FFFFFF;
+    color: #111827;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+  }
+  
+  [data-theme="dark"] .import-detail-item {
+    background: #1F2937;
+    color: #F9FAFB; 
+    border-color: #374151;
+  }
+  
+  .import-detail-icon {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 16px;
+  }
+  
+  .import-detail-content {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .import-detail-label {
+    font-size: 12px;
+    color: #6B7280;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  
+  [data-theme="dark"] .import-detail-label {
+    color: #9CA3AF;
+  }
+  
+  .import-detail-value {
+    font-size: 14px;
+    color: #111827;
+    font-weight: 500;
+    word-break: break-word;
+  }
+  
+  [data-theme="dark"] .import-detail-value {
+    color: #F9FAFB;
+  }
+  
+  .import-detail-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--color-primary);
+    color: white;
+    margin-right: 6px;
+  }
+  
+  .import-url-text {
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    color: #111827;
+  }
+  
+  [data-theme="dark"] .import-url-text {
+    color: #F9FAFB;
+  }
+  
+  /* Fluxo de navegação - BOLINHAS NUMERADAS */
+  .import-flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  
+  .import-flow-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px !important;
+    height: 22px !important;
+    min-width: 22px !important;
+    max-width: 22px !important;
+    border-radius: 50% !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    flex-shrink: 0 !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+  
+  .import-flow-method {
+    font-weight: 700;
+    min-width: 50px;
+    flex-shrink: 0;
+  }
+  
+  .import-flow-url {
+    color: #4B5563;
+    flex: 1;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+  
+  [data-theme="dark"] .import-flow-url {
+    color: #D1D5DB;
+  }
+`;
+  document.head.appendChild(style);
+}
+
+// ============================================================
+// BIND DO INPUT FILE (CORRIGIDO - SEM DUPLO CLIQUE)
+// ============================================================
+
+// Aguarda DOM carregar e vincula o listener UMA VEZ SÓ
+document.addEventListener('DOMContentLoaded', function () {
+  setupRecordingImporterFinal();
+});
+
+function setupRecordingImporterFinal() {
+  const importButton = document.getElementById('open-recording-importer');
+
+  if (!importButton) {
+    console.warn('Botão open-recording-importer não encontrado');
+    return;
+  }
+
+  // Verifica se já foi configurado
+  if (importButton.hasAttribute('data-importer-final-setup')) {
+    return;
+  }
+
+  // Marca como configurado
+  importButton.setAttribute('data-importer-final-setup', 'true');
+
+  // Remove TODOS os event listeners antigos clonando o botão
+  const newButton = importButton.cloneNode(true);
+  importButton.parentNode.replaceChild(newButton, importButton);
+
+  // Cria input file oculto
+  let fileInput = document.getElementById('recording-file-input-final');
+
+  if (fileInput) {
+    fileInput.remove(); // Remove input antigo se existir
+  }
+
+  fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.id = 'recording-file-input-final';
+  fileInput.accept = '.json';
+  fileInput.style.display = 'none';
+  document.body.appendChild(fileInput);
+
+  // Adiciona listener de mudança
+  fileInput.addEventListener('change', handleRecordingImportAuto);
+
+  // Botão abre o file picker (SEM DUPLO CLIQUE)
+  newButton.addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation(); // Para TODOS os listeners
+
+    // Abre file picker direto
+    fileInput.click();
+
+    return false;
+  }, { capture: true, once: false });
+
+  console.log('✅ Importação automática FINAL configurada (sem duplo clique)!');
+}
+
+// Fallback: tenta configurar novamente após 1s se não funcionou
+setTimeout(setupRecordingImporterFinal, 1000);
+
+// Exporta para console (debug)
+window.handleRecordingImportAuto = handleRecordingImportAuto;
+window.extractTestConfigFromRecording = extractTestConfigFromRecording;
+window.setupRecordingImporterFinal = setupRecordingImporterFinal;
+
+console.log('📦 Módulo de Importação Automática V3 FINAL carregado!');

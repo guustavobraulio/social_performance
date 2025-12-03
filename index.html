@@ -246,6 +246,14 @@
                   </div>
                 </div>
               </details>
+                <div class="recording-importer-section" style="margin-top: 20px;">
+                  <p style="font-size: 12px; color: var(--color-text-secondary); margin-bottom: 12px;">
+                    Importe abaixo as gravações de navegação para gerar scripts de teste automaticamente.
+                  </p>
+                  <button class="btn btn-secondary" id="open-recording-importer" style="width: 100%;">
+                    📂 Importar Gravação
+                  </button>
+                </div>
             </div>
 
             <button class="btn btn-launch" id="startBtn">
@@ -559,14 +567,6 @@
         </div>
       </div>
     </div>
-    
-    <!-- Action Recorder - Nova Ferramenta -->
-    <div class="tool-card" data-tool="action-recorder">
-      <div class="tool-icon">🎬</div>
-      <h3>Action Recorder</h3>
-      <p>Grave e reproduza interações do usuário</p>
-      <button class="btn btn-primary">Abrir</button>
-    </div>
 
     <!-- Scheduler Tab View -->
     <div id="schedulerView" class="tab-view">
@@ -653,5 +653,44 @@
   </main>
 
   <script src="app.js"></script>
+
+  <!-- Modal de Importação Bem-sucedida -->
+<div id="importSuccessModal" class="modal">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border-radius: 12px 12px 0 0;">
+      <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        Gravação Importada com Sucesso!
+      </h2>
+      <button class="modal-close" id="closeImportSuccess" style="color: white;">&times;</button>
+    </div>
+    <div class="modal-body" style="padding: 24px;">
+      <div style="background: #F0FDF4; border-left: 4px solid #10B981; padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+        <p style="margin: 0; color: #065F46; font-weight: 500;">
+          📊 Configuração detectada e aplicada automaticamente
+        </p>
+      </div>
+      
+      <div id="importSuccessDetails" style="display: grid; gap: 12px;">
+        <!-- Conteúdo dinâmico será inserido aqui -->
+      </div>
+      
+      <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--color-border);">
+        <p style="margin: 0 0 8px 0; font-size: 13px; color: var(--color-text-secondary);">
+          💡 <strong>Próximo passo:</strong> Revise as configurações e clique em "Executar Teste"
+        </p>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content: center;">
+      <button class="btn btn-launch" id="closeImportSuccessBtn" style="min-width: 150px;">
+        Entendi
+      </button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

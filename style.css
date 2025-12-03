@@ -819,6 +819,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   box-sizing: border-box;
+  overflow: hidden !important;
 }
 
 html, body, #root, #app {
@@ -1199,6 +1200,13 @@ main, .main-content {
   box-sizing: border-box;
 }
 
+.main-content,
+.tab-view,
+.config-layout {
+  height: auto;        /* em vez de 100vh/100% se estiver assim */
+  overflow: visible;   /* nunca hidden aqui */
+}
+
 .sidebar.collapsed ~ .main-content {
   margin-left: 80px;
   width: calc(100vw - 80px);
@@ -1468,8 +1476,8 @@ main, .main-content {
   width: 30%;
   min-width: 0;
   max-width: 30%;
-  height: 100%;
-  overflow-y: auto;
+  height: auto;
+  overflow-y: visi;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
@@ -1561,7 +1569,9 @@ main, .main-content {
 
 .config-panel .card {
   padding: 24px;
-  margin-bottom: 0;
+  margin-bottom: 80;
+  max-height: none;
+  overflow: visible;
 }
 
 .config-panel .card h2 {
@@ -2203,20 +2213,18 @@ input[type="number"]::-moz-number-spin-box {
   transform: none !important;
 }
 
-/* Script Panel */
-/* Script Card - Compact in 30% panel */
+/* Script Card - coluna direita */
 .script-card {
   width: 100%;
   margin: 0;
+  height: auto;
   max-height: none;
-  overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   background: var(--secondary-bg);
-  height: auto;
-  min-width: 0;
-  max-width: 100%;
   border: 1px solid var(--border);
   border-radius: 12px;
 }
@@ -2224,11 +2232,9 @@ input[type="number"]::-moz-number-spin-box {
 .script-panel .script-card {
   max-width: 100%;
   padding: 0;
-  padding-top: 0;
 }
 
-
-
+/* Cabeçalho do script fixo no topo do card */
 .script-header {
   position: sticky;
   top: 0;
@@ -2236,14 +2242,14 @@ input[type="number"]::-moz-number-spin-box {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
-  height: 40px;
-  min-height: 40px;
-  background: var(--secondary-bg);
-  border-bottom: 1px solid var(--border);
   gap: 12px;
   width: 100%;
   max-width: 100%;
+  min-height: 40px;
+  height: 40px;
+  padding: 10px 12px;
+  background: var(--secondary-bg);
+  border-bottom: 1px solid var(--border);
   box-sizing: border-box;
   overflow: hidden;
   flex-shrink: 0;
@@ -3351,7 +3357,7 @@ input[type="number"]::-moz-number-spin-box {
   border: 1px solid var(--border);
   border-radius: 16px;
   width: 90%;
-  max-width: 800px;
+  max-width: 800px !important;
   max-height: 90vh;
   overflow: hidden;
   display: flex;
@@ -3619,4 +3625,57 @@ input[type="number"]::-moz-number-spin-box {
 
 .script-content::-webkit-scrollbar-thumb:hover {
   background-color: var(--accent);
+}
+
+/* Detalhes da importação */
+.import-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-surface);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.import-detail-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.import-detail-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.import-detail-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.import-detail-value {
+  font-size: 14px;
+  color: var(--color-text);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.import-detail-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--color-primary);
+  color: white;
 }
