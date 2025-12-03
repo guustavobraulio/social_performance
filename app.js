@@ -52,9 +52,8 @@ const mockTests = [
   {
     url: "https://pack-nbn.netlify.app/",
     engine: "k6",
-    test_type: "Stress Test",
     users: 20,
-    status: "Sucessas",
+    status: "Sucesso",
     diagnostic: "Performance boa",
     error_rate: 1.3,
     avg_response: 452
@@ -62,9 +61,8 @@ const mockTests = [
   {
     url: "https://api.exemplo.com/users",
     engine: "k6",
-    test_type: "Load Test",
     users: 500,
-    status: "Sucessas",
+    status: "Sucesso",
     diagnostic: "Performance excelente",
     error_rate: 1.3,
     avg_response: 284
@@ -72,9 +70,8 @@ const mockTests = [
   {
     url: "https://api.exemplo.com/products",
     engine: "jmeter",
-    test_type: "Stress Test",
     users: 1000,
-    status: "Sucessas",
+    status: "Sucesso",
     diagnostic: "Site com performance razoável",
     error_rate: 4.8,
     avg_response: 450
@@ -82,7 +79,6 @@ const mockTests = [
   {
     url: "https://api.exemplo.com/orders",
     engine: "k6",
-    test_type: "Spike Test",
     users: 2000,
     status: "Erro",
     diagnostic: "Site muito lento",
@@ -1204,18 +1200,16 @@ async function runRealPerformanceTest(config) {
           addLog('info', '💡 O servidor bloqueou requisições CORS');
           if (!useCorsProxy) {
             addLog('info', '🔄 Proxy CORS será ativado automaticamente após alguns erros');
-            addLog('info', '💡 Dica: Marque "Usar Proxy CORS" para ativar desde o início');
           } else {
             addLog('info', '⚠️ Proxy CORS está ativo mas ainda há erros');
             addLog('info', '🔄 Tentando próximo proxy automaticamente...');
           }
-          addLog('info', '💡 Sugestão: Teste APIs que permitem CORS como jsonplaceholder.typicode.com');
           addLog('info', '📖 Veja CORS_SOLUTIONS.md para mais opções');
         } else if (errorType === 'network') {
           addLog('info', '💡 Verifique sua conexão e se o servidor está acessível');
         }
         // Log detalhado apenas no console, não poluir a UI
-        // Error logged to UI, no console spam
+        console.error({
           name: errorName,
           message: errorMsg,
           type: errorType,
@@ -1349,7 +1343,7 @@ async function runRealPerformanceTest(config) {
 // Helper function to save test to history
 function saveTestToHistory(config, results) {
   // Determine status and diagnostic
-  let status = 'Sucessas';
+  let status = 'Sucesso';
   let diagnostic = 'Performance excelente';
   const errorRate = 100 - results.successRate;
 
@@ -1367,7 +1361,6 @@ function saveTestToHistory(config, results) {
     date: new Date().toISOString(),
     url: config.url,
     engine: config.engine.toLowerCase().includes('k6') ? 'k6' : 'jmeter',
-    test_type: config.testType,
     users: config.users,
     status: status,
     diagnostic: diagnostic,
@@ -1512,14 +1505,13 @@ function updateHistoryTable() {
     const date = new Date(test.date);
     const formattedDate = date.toLocaleDateString('pt-BR');
     const formattedTime = date.toLocaleTimeString('pt-BR');
-    const statusClass = test.status === 'Sucessas' ? 'test-status-success' : 'test-status-error';
+    const statusClass = test.status === 'Sucesso' ? 'test-status-success' : 'test-status-error';
     
     return `
       <tr>
         <td>${formattedDate} ${formattedTime}</td>
         <td>${test.url}</td>
         <td>${test.engine}</td>
-        <td>${test.test_type}</td>
         <td>${test.users}</td>
         <td><span class="test-status-badge ${statusClass}">${test.status}</span></td>
         <td>${test.diagnostic}</td>
@@ -1532,7 +1524,7 @@ function updateHistoryTable() {
 
 function updateSidebarStats() {
   const totalTests = testState.history.length;
-  const successTests = testState.history.filter(t => t.status === 'Sucessas').length;
+  const successTests = testState.history.filter(t => t.status === 'Sucesso').length;
   const successRate = totalTests > 0 ? ((successTests / totalTests) * 100).toFixed(1) : 0;
   
   document.getElementById('totalTests').textContent = totalTests;
@@ -2033,7 +2025,7 @@ function generateReport() {
   const previewDiv = document.getElementById('reportPreview');
   const avgResponseTime = selectedTests.reduce((sum, t) => sum + t.avg_response, 0) / selectedTests.length;
   const avgErrorRate = selectedTests.reduce((sum, t) => sum + t.error_rate, 0) / selectedTests.length;
-  const successCount = selectedTests.filter(t => t.status === 'Sucessas').length;
+  const successCount = selectedTests.filter(t => t.status === 'Sucesso').length;
   
   previewDiv.innerHTML = `
     <div style="background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
@@ -2091,7 +2083,7 @@ function downloadReport(format) {
         generated: new Date().toISOString(),
         summary: {
           totalTests: selectedTests.length,
-          successRate: ((selectedTests.filter(t => t.status === 'Sucessas').length / selectedTests.length) * 100).toFixed(1) + '%',
+          successRate: ((selectedTests.filter(t => t.status === 'Sucesso').length / selectedTests.length) * 100).toFixed(1) + '%',
           avgResponseTime: Math.round(selectedTests.reduce((sum, t) => sum + t.avg_response, 0) / selectedTests.length) + 'ms',
           avgErrorRate: (selectedTests.reduce((sum, t) => sum + t.error_rate, 0) / selectedTests.length).toFixed(1) + '%'
         },
@@ -2571,7 +2563,7 @@ function generatePDFContent(tests, options) {
   content += '┌─ RESUMO EXECUTIVO\n';
   content += '│\n';
   
-  const successTests = tests.filter(t => t.status === 'Sucessas').length;
+  const successTests = tests.filter(t => t.status === 'Sucesso').length;
   const successRate = tests.length > 0 ? ((successTests / tests.length) * 100).toFixed(1) : 0;
   const avgResponseTime = tests.reduce((sum, t) => sum + t.avg_response, 0) / tests.length;
   const avgErrorRate = tests.reduce((sum, t) => sum + t.error_rate, 0) / tests.length;
@@ -2643,7 +2635,7 @@ function generatePDFContent(tests, options) {
 }
 
 function generateHTMLReport(tests, options) {
-  const successTests = tests.filter(t => t.status === 'Sucessas').length;
+  const successTests = tests.filter(t => t.status === 'Sucesso').length;
   const successRate = tests.length > 0 ? ((successTests / tests.length) * 100).toFixed(1) : 0;
   const avgResponseTime = tests.reduce((sum, t) => sum + t.avg_response, 0) / tests.length;
   const avgErrorRate = tests.reduce((sum, t) => sum + t.error_rate, 0) / tests.length;
@@ -2717,7 +2709,7 @@ function generateHTMLReport(tests, options) {
             <td>${test.engine.toUpperCase()}</td>
             <td>${test.test_type}</td>
             <td>${test.users}</td>
-            <td class="status-${test.status === 'Sucessas' ? 'success' : 'error'}">${test.status}</td>
+            <td class="status-${test.status === 'Sucesso' ? 'success' : 'error'}">${test.status}</td>
             <td>${test.avg_response}ms</td>
           </tr>
         `).join('')}
@@ -2751,7 +2743,7 @@ function generateCSVReport(tests, options) {
   if (options.includeComparisons) {
     csv += '\n';
     csv += '=== RESUMO ===\n';
-    const successTests = tests.filter(t => t.status === 'Sucessas').length;
+    const successTests = tests.filter(t => t.status === 'Sucesso').length;
     const successRate = ((successTests / tests.length) * 100).toFixed(1);
     const avgResponseTime = Math.round(tests.reduce((sum, t) => sum + t.avg_response, 0) / tests.length);
     csv += `Total de Testes,${tests.length}\n`;
